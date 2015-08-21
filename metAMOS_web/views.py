@@ -71,6 +71,8 @@ def result(request, sample_id, bipype_variant):
     output_path = os.path.join(SAMPLE_PATH[sample_source], sample_id, 'bipype_output', bipype_variant)
     krona_xml_path = os.path.join(SAMPLE_PATH[sample_source], sample_id, 'bipype_output', bipype_variant + '/krona.html')
     krona_html_path = os.path.join(SAMPLE_PATH[sample_source], sample_id, 'bipype_output', bipype_variant + '/krona.xml.html')
+    if os.path.exists(krona_html_path):
+        os.remove(krona_html_path)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
         daemon.check_and_add_sample(sample_id, bipype_variant)
@@ -96,6 +98,8 @@ def show_krona_list(request):
 def show_single_krona(request, krona_name):
     krona_xml_path = os.path.join(OUTPUT_ANALYSES_PATH, krona_name)
     krona_html_path = os.path.join(OUTPUT_ANALYSES_PATH, krona_name + '.xml.html')
+    #if os.path.exists(krona_html_path):
+    #    os.remove(krona_html_path)
     os.system(
             'PERL5LIB=/home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona /home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona/ImportXML.pl' + \
                     krona_xml_path + ' -o ' + krona_html_path
