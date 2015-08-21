@@ -9,8 +9,9 @@ def get_sample_list():
     ans = {}
     for workflow in SAMPLE_PATH.keys():
         ans[workflow] = os.listdir(SAMPLE_PATH[workflow])
-        ans[workflow] = [i for i in ans[workflow] if not os.path.isfile(os.path.join(SAMPLE_PATH[workflow], i))]   # leave only directories
-        ans[workflow] = [i for i in ans[workflow] if i.startswith('Sample_')]                            # starting with Sample_
+        ans[workflow] = [i for i in ans[workflow] if 'fastq' in i]
+        #ans[workflow] = [i for i in ans[workflow] if not os.path.isfile(os.path.join(SAMPLE_PATH[workflow], i))]   # leave only directories
+        #ans[workflow] = [i for i in ans[workflow] if i.startswith('Sample_')]                            # starting with Sample_
     return ans
     #return ['Sample_BF_B2_200', 'Sample_BH1_B2_200_seq11', 'Sample_GB_B2_200_seq11']   # return value for testing
 
