@@ -61,6 +61,31 @@ def new(request):
     form = SelectSampleForm()
     return render_to_response('new_job.html', {'form': form})
 
+# view for testing
+def test(request):
+    # very first bootstrap test
+    columns = [{
+        'field': 'id',
+        'title': 'Item ID'
+    }, {
+        'field': 'name',
+        'title': 'Item Name'
+    }, {
+        'field': 'price',
+        'title': 'Item Price'
+    }]
+    data = [{
+        'id': 1,
+        'name': 'Item 1',
+        'price': '$1'
+    }, {
+        'id': 2,
+        'name': 'Item 2',
+        'price': '$2'
+    }]
+    
+    return render_to_response('testing_template.html', {'table_data': data, 'table_columns': columns})
+
 def result_redirect(request):
     sample_source, sample_id = request.GET['selected_sample'].split('/')
     bipype_variant = 'bipype_' + request.GET['selected_bipype_variant'] + '_' + sample_source.lower()
