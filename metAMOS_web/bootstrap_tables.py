@@ -1,40 +1,37 @@
 """
-This module provides a BootstrapTable, which enable
+This module provides a BootstrapTable class, which enable
 convinient rendering of bootstrapTables with Python.
 
 BootstrapTable is able to generate for you:
 
- - full HTML table, prepared to later post process with bootstrapTable.
+ - full HTML table, prepared for later post process with bootstrapTable.
  - a string representing JavaScript Object Literal, containing all
-   information about table that should be passed to constructor,
-   when you wish to create a table with JavaScript call.
+   information about table that should be passed to a constructor,
+   if you wish to create a table with JavaScript call.
  - out-of-box ready JavaScript call to bootstrapTable constructor,
    but only if you specified 'table_id' earlier.
 
 As an addition, elements containing data can be exported as JSON string,
 and later passed to browser with use of AJAX-like technologies.
 
-
 What is JavaScript Object Literal Notation?
 
     It is a native notation used in JavaScript to represent objects
     as plain text, with use of different brackets and assignments.
-    It's something more then JSON, which is subset of JSOL(N).
+    It's something more then JSON, which is a subset of JSOL(N).
 
     For example in JSON we are not allowed to pass a function name or
     declaration, but in JSOL it is possible (JSON is data-only format).
 
     It is defined by ECMA 262 standard (look for ObjectLiteral).
 
-
 How can I pass a function declaration or variable name to JSOL?
 
-    In this module You should encapsulate your string with desired
+    In this module you should encapsulate your string with desired
     content by Raw() class, so it could be later identified as the
     string, that should be left without quotes during output-string
     assembly (yes, unquoted strings are the way, how in JSOL datum is
     identified as function or variable, the same way as in Python)
-
 
 Example I:
 
@@ -60,7 +57,6 @@ Example I:
     # print table.get_html_data_rows()
     # print table.get_html_columns()
     # print table.as_js_with_constructor()
-
 
 Example II:
 
@@ -97,7 +93,6 @@ Example II:
         table.data.add(id=i, sample=sample)
 
     print table.as_js_with_constructor()
-
 
 More advanced exemplars TBA.
 """
@@ -146,7 +141,6 @@ class Container(object):
         self.indent = "\t"
         self.new_line = "\n"
 
-
     def test_wrappers(self):
         """
         Check whether both wrappers are in place.
@@ -155,7 +149,6 @@ class Container(object):
         ensure that our consistent formatting will be kept.
         """
         assert len(filter(bool, self.wrappers)) == 2
-
 
     def all(self):
         """
@@ -186,20 +179,17 @@ class Container(object):
         # let it be parsed be standard json module
         return json.dumps(value)
 
-
     def _format(self, data):
         """
         Stub: Allows sub classes to modify data formatting
         """
         return self._convert_to_js(data)
 
-
     def _get_formatted_contents(self):
         """
         Returns list with formatted contents
         """
         return [self._format(data) for data in self._data]
-
 
     def __str__(self):
         """
@@ -224,7 +214,6 @@ class Container(object):
 
         return output
 
-
     def compressed_str(self):
         """
         Prints compressed representation of container in JSOL notation.
@@ -240,6 +229,9 @@ class Container(object):
 
         return output
 
+    def clean(self):
+        self._data = []
+
 
 class Object(Container):
     """
@@ -253,10 +245,8 @@ class Object(Container):
         self._data = {}
         self.wrappers = ["{", "}"]
 
-
     def set(self, **kwargs):
         self._data.update(kwargs)
-
 
     def _format(self, key):
         """
@@ -264,6 +254,9 @@ class Object(Container):
         (that one, which is used for object declarations).
         """
         return '"' + key + '": ' + self._convert_to_js(self._data[key])
+
+    def clean(self):
+        self._data = {}
 
 
 class List(Container):
@@ -275,23 +268,19 @@ class List(Container):
     def __init__(self, level=0):
         Container.__init__(self, level)
 
-
     def add_item(self, item):
         self._data.append(item)
-
 
     def add_object(self, **kwargs):
         obj = Object(self.level+1)
         obj.set(**kwargs)
         self._data.append(obj)
 
-
     def add_list(self, args):
         lis = List(self.level+1)
         for arg in args:
             lis.add(arg)
         self._data.append(lis)
-
 
     def add(self, *args, **kwargs):
         """
@@ -333,13 +322,11 @@ class BootstrapTable(Object):
         self.data = List(level=1)
         self.html_id = html_id
 
-
     def decamelize(self, name):
         """
         Transforms string from form like: sortOrder to sort-order.
         """
         return self.camel_regex.sub(r'-\1', name).lower()
-
 
     def create_attribute(self, attr_tuple):
         """
@@ -359,7 +346,6 @@ class BootstrapTable(Object):
 
         return self.decamelize(key) + '="' + value + '"'
 
-
     def start_tag(self, tag, attr_dict):
         """
         Creates HTML opening tag with attributes from 'attr_dict'.
@@ -377,7 +363,6 @@ class BootstrapTable(Object):
 
         return out
 
-
     def create_tag(self, tag, attr_dict, contents):
         """
         Creates HTML tag 'tag' containing 'contents', with attributes
@@ -388,7 +373,6 @@ class BootstrapTable(Object):
         out += '</' + tag + '>'
 
         return out
-
 
     def get_html_columns(self, spacer='\n'):
         """
@@ -407,11 +391,11 @@ class BootstrapTable(Object):
             out += spacer + self.create_tag('td', data, title)
         return out
 
-
     def get_html_data_rows(self, spacer='\n'):
         """
         Creates HTML table rows with content corresponding to data
         gathered about rows in 'self.rows' List.
+        Only data referred by columns will be rendered.
         """
         out = ''
         for item in self.data.all():
@@ -428,10 +412,17 @@ class BootstrapTable(Object):
             out += spacer + '</tr>'
         return out
 
-
-    def as_html(self):
+    def as_html(self, additional_attributes=None, auto_load=False):
         """
         Return HTML table representing current Bootstrap Table instance.
+
+        additional_attributes: a dict with attributes to be added into <table>
+        HTML tag, such as class or id. For example, to add class 'stripped',
+        the dict should be: {'class': 'stripped'}. Note, that in case of
+        conflict items from this dict will be preferred over instance's ones.
+
+        auto_load: boolean value - determines, whether table should be
+        immediately converted to bootstrapTable (by setting data-toggle option)
         """
         data = {'data-' + x: y for x, y in self._data.iteritems() if y}
 
@@ -440,8 +431,11 @@ class BootstrapTable(Object):
         if self.html_id:
             data['id'] = self.html_id
 
-        # if you  always want to have automatic loading, uncomment:
-        # data['data-toggle'] = 'table'
+        if additional_attributes:
+            data.update(additional_attributes)
+
+        if auto_load:
+            data['data-toggle'] = 'table'
 
         out = self.start_tag('table', data)
 
@@ -455,7 +449,6 @@ class BootstrapTable(Object):
 
         return out
 
-
     def as_js(self):
         """
         Returns all information about current table in form of
@@ -463,7 +456,6 @@ class BootstrapTable(Object):
         used as an argument for BootstrapTable initializer.
         """
         return self.__str__()
-
 
     def as_json(self, restrict_to=None):
         """
@@ -480,7 +472,6 @@ class BootstrapTable(Object):
 
         return json.dumps(json.loads(jsol))
 
-
     def as_js_with_constructor(self):
         """
         Creates bootstrapTable constructor with use of table data.
@@ -493,7 +484,6 @@ class BootstrapTable(Object):
         out += self.as_js()
         out += ");}"
         return out
-
 
     def __str__(self):
         """
