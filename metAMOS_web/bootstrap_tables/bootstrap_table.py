@@ -1,6 +1,6 @@
 """
 This module provides a BootstrapTable class, which enable
-convinient rendering of bootstrapTables with Python.
+convenient rendering of bootstrapTables with Python.
 
 BootstrapTable is able to generate for you:
 
@@ -239,6 +239,7 @@ class Object(Container):
         - keys are names of properties,
         - values are values associated with these properties
     """
+    camel_regex = re.compile('([A-Z]+)')
 
     def __init__(self, level=0):
         Container.__init__(self, level)
@@ -248,6 +249,9 @@ class Object(Container):
     def set(self, **kwargs):
         self._data.update(kwargs)
 
+    def get(self, key):
+        return self._data.get(key, '')
+
     def _format(self, key):
         """
         Formats dicts entry of given key to JavaScript representation
@@ -255,14 +259,30 @@ class Object(Container):
         """
         return '"' + key + '": ' + self._convert_to_js(self._data[key])
 
+    def decamelize(self, name):
+        """
+        Transforms string from form like: sortOrder to sort-order.
+        """
+        return self.camel_regex.sub(r'-\1', name).lower()
+
     def clean(self):
         self._data = {}
+
+    def as_attributes(self):
+        """
+        Return contents, formatted as it is required to use them as
+        HTML attributes (keys will be decamelized and prefixed with 'data-', so
+        BactrianCamel will become data-bactrian-camel). Items with empty values
+        or other values considered false will be skipped.
+        """
+        item_iterator = self._data.iteritems()
+        return {'data-' + self.decamelize(x): y for x, y in item_iterator if y}
 
 
 class List(Container):
     """
     Represents JavaScript list.
-    Formating options and storage are entirely inherited from Container.
+    Formatting options and storage are entirely inherited from Container.
     """
 
     def __init__(self, level=0):
@@ -309,11 +329,11 @@ class BootstrapTable(Object):
     export it to HTML, JavaScript or JSON (also only some parts).
     """
 
-    camel_regex = re.compile('([A-Z]+)')
+    js_call_template = "function(){{$('#{id}').bootstrapTable({data})}}"
 
     def __init__(self, html_id=None):
         """
-        Creates BootrstrapTable Object. If html_id specified, the HTML
+        Creates BootstrapTable Object. If html_id specified, the HTML
         table tag will have additional attribute: id="<html_id>".
         """
         Object.__init__(self)
@@ -321,12 +341,6 @@ class BootstrapTable(Object):
         self.columns = List(level=1)
         self.data = List(level=1)
         self.html_id = html_id
-
-    def decamelize(self, name):
-        """
-        Transforms string from form like: sortOrder to sort-order.
-        """
-        return self.camel_regex.sub(r'-\1', name).lower()
 
     def create_attribute(self, attr_tuple):
         """
@@ -344,13 +358,11 @@ class BootstrapTable(Object):
         if value.startswith('"') and value.endswith('"'):
             value = value[1:-1]
 
-        return self.decamelize(key) + '="' + value + '"'
+        return key + '="' + value + '"'
 
     def start_tag(self, tag, attr_dict):
         """
         Creates HTML opening tag with attributes from 'attr_dict'.
-        Please not, that all names of attributes will be decamelized
-        (it means conversion from CamelCamel to camel-camel notation).
         """
         out = '<' + tag
 
@@ -365,8 +377,8 @@ class BootstrapTable(Object):
 
     def create_tag(self, tag, attr_dict, contents):
         """
-        Creates HTML tag 'tag' containing 'contents', with attributes
-        from 'attr_dict', where attributes names are decamelized.
+        Creates HTML tag 'tag' containing 'contents',
+        with attributes from 'attr_dict'.
         """
         out = self.start_tag(tag, attr_dict)
         out += contents
@@ -382,13 +394,13 @@ class BootstrapTable(Object):
         out = ''
         for item in self.columns.all():
             # TODO: if it is list, then one more loop?
-            if is_container(item):
-                data = copy.copy(item.all())
+            if isinstance(item, Object):
+                data = copy.copy(item.as_attributes())
                 title = data.pop('title', '')
             else:
                 data = {}
                 title = json.dumps(item)
-            out += spacer + self.create_tag('td', data, title)
+            out += spacer + self.create_tag('th', data, title)
         return out
 
     def get_html_data_rows(self, spacer='\n'):
@@ -416,6 +428,12 @@ class BootstrapTable(Object):
         """
         Return HTML table representing current Bootstrap Table instance.
 
+        Please not, that all names of attributes from Objects will be
+        decamelized and prefixed with 'data-', to follow HTML5 formatting (it
+        means conversion from BactrianCamel to data-bactrian-camel notation).
+
+        Args:
+
         additional_attributes: a dict with attributes to be added into <table>
         HTML tag, such as class or id. For example, to add class 'stripped',
         the dict should be: {'class': 'stripped'}. Note, that in case of
@@ -424,7 +442,7 @@ class BootstrapTable(Object):
         auto_load: boolean value - determines, whether table should be
         immediately converted to bootstrapTable (by setting data-toggle option)
         """
-        data = {'data-' + x: y for x, y in self._data.iteritems() if y}
+        data = self.as_attributes()
 
         tr_spacer = self.new_line + self.indent
 
@@ -439,11 +457,15 @@ class BootstrapTable(Object):
 
         out = self.start_tag('table', data)
 
+        out += tr_spacer + '<thead>'
         out += tr_spacer + '<tr>'
         out += self.get_html_columns(spacer=tr_spacer + self.indent)
         out += tr_spacer + '</tr>'
+        out += tr_spacer + '</thead>'
 
+        out += tr_spacer + '<tbody>'
         out += self.get_html_data_rows(spacer=tr_spacer)
+        out += tr_spacer + '</tbody>'
 
         out += self.new_line + "</table>"
 
@@ -480,10 +502,7 @@ class BootstrapTable(Object):
         but it will be easy to change in future.
         """
         assert self.html_id
-        out = "function(){$('#" + self.html_id + "').bootstrapTable("
-        out += self.as_js()
-        out += ");}"
-        return out
+        return self.js_call_template.format(id=self.html_id, data=self.as_js())
 
     def __str__(self):
         """
@@ -493,3 +512,4 @@ class BootstrapTable(Object):
         out = Object.__str__(self)
         self.set(columns='', data='')
         return out
+
