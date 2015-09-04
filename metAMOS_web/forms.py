@@ -1,7 +1,8 @@
 from django.forms import forms
 from django.forms.fields import ChoiceField
-from bootstrap_tables.widgets import BootstrapTableSelect
 from django.forms.widgets import Select
+from bootstrap_tables.widgets import BootstrapTableSelect
+from bootstrap_tables.widgets import BootstrapTableSelectMultiple
 
 import sys
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
@@ -11,6 +12,39 @@ from helpers import get_pretty_sample_list, get_workflow_pretty_names
 
 bipype_variant_list = get_workflow_pretty_names()
 sample_list = get_pretty_sample_list()
+
+
+def set_common_options(table, field_id):
+    """
+    On object 'table' of class BootstrapTableWidget or subclasses set common
+    properties like pagination, search engine etc and add, which will be used
+    in both instances.
+    """
+    table.set(search=True)
+
+    # showColumns is a switch, allowing to choose which columns are visible.
+    table.set(showColumns=True)
+
+    # Set pagination, and a switch which allows turning pagination off.
+    table.set(pagination=True, pageSize=5, pageList=[5, 10, 25, 50])
+    table.set(showPaginationSwitch=True)
+
+    # Move label into toolbar area, to make it look as a part of the table.
+    table.set(toolbar='label[for={0}]'.format(field_id))
+
+    # To have both header and contents horizontally centered so (h)align.
+    table.columns.add(field='nr', title='#', align='center',
+                      sortable=True, halign='center')
+    table.columns.add(field='sample', title='Name', sortable=True)
+
+
+class RemoveSampleForm(forms.Form):
+
+    table = BootstrapTableSelectMultiple('sample')
+    set_common_options(table, 'id_sample_to_remove')
+
+    # Use BootstrapTableSelect widget here, instead of default Select widget
+    sample_to_remove = ChoiceField(choices=enumerate(sample_list), widget=table)
 
 
 class SelectSampleForm(forms.Form):
@@ -30,24 +64,7 @@ class SelectSampleForm(forms.Form):
     )
 
     table = BootstrapTableSelect('sample')
+    set_common_options(table, 'id_selected_sample')
 
-    table.set(search=True)
-
-    # showColumns is a switch, allowing to choose which columns are visible
-    table.set(showColumns=True)
-
-    # it moves our label toolbar field, which looks cool. If are going to change
-    # default widget's id, please remember to update this line respectively.
-    table.set(toolbar='label[for=id_selected_sample]')
-
-    # let's set pagination, and switcher which allows to turn it off
-    table.set(pagination=True, pageSize=5, showPaginationSwitch=True)
-
-    # we want to have both header and contents horizontally centered so (h)align
-    table.columns.add(field='nr', title='#', align='center',
-                      sortable=True, halign='center')
-    table.columns.add(field='sample', title='Name', sortable=True)
-
-    # finally we are using our table widget here, instead of default Select().
-    selected_sample = ChoiceField(choices=enumerate(sample_list),
-                                  widget=table)
+    # Use BootstrapTableSelect widget here, instead of default Select widget
+    selected_sample = ChoiceField(choices=enumerate(sample_list), widget=table)
