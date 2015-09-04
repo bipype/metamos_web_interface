@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>{% block title %}{% endblock %}Biogazownia</title>
+
+    {# Custom CSS #}
+    <style type="text/css">
+      body {
+        padding-top: 50px;
+      }
+      #main-content
+      {
+        padding: 40px 15px;
+        text-align: center;
+      }
+    </style>
+
+    {% load staticfiles %}
+
+    {# Bootstrap core CSS #}
+    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.8.1/bootstrap-table.min.css" rel="stylesheet">
+
+    {#
+      JavaScript files: jQuery, Bootstrap JavaScript and bootstrapTable:
+      Placed here, at the begining, because bootstrapTable events should
+      be loaded before any froms which would need to use these events.
+    #}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="{% static "js/bootstrap.min.js" %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.8.1/bootstrap-table.min.js"></script>
+
+
+    {# HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries #}
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/biogaz/">Biogazownia</a>
+        </div>
+        <div class="collapse navbar-collapse">
+
+          <ul class="nav navbar-nav">
+            <li class="{% block nav-new %}{% endblock %}"><a href="/biogaz/new">Choose sample</a></li>
+            <li class="{% block nav-test %}{% endblock %}"><a href="/biogaz/test">Test</a></li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div id="main-content">
+        {% block content %}
+        {% endblock %}
+      </div>
+    </div>
+
+</body>
+</html>
