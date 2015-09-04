@@ -69,6 +69,12 @@ def test(request):
     return render_to_response('testing_template.html', {'form': form})
 
 
+def remove(request):
+    import forms
+    form = forms.RemoveSampleForm()
+    return render_to_response('remove.html', {'form': form})
+
+
 def result_redirect(request):
     sample_source, sample_id = request.GET['selected_sample'].split('/')
     bipype_variant = 'bipype_' + request.GET['selected_bipype_variant'] + '_' + sample_source.lower()
