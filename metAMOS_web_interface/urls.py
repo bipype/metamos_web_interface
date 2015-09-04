@@ -26,4 +26,5 @@ urlpatterns = patterns('',
     url(r'^biogaz/result_outanal/(?P<krona_name>.*)$', 'metAMOS_web.views.show_single_krona'),
 
     url(r'^test/$', 'metAMOS_web.views.test'),
+    url(r'^remove/$', 'metAMOS_web.views.remove'),
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
