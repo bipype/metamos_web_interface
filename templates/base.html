@@ -57,6 +57,8 @@
 
           <ul class="nav navbar-nav">
             <li class="{% block nav-new %}{% endblock %}"><a href="/biogaz/new">Choose sample</a></li>
+            {# TODO: following links should be removed just before 'publication' #}
+            <li class="{% block nav-remove %}{% endblock %}"><a href="/biogaz/remove">Remove</a></li>
             <li class="{% block nav-test %}{% endblock %}"><a href="/biogaz/test">Test</a></li>
           </ul>
 
