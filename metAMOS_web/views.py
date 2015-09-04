@@ -66,13 +66,53 @@ def new(request):
 def test(request):
     import forms
     form = forms.SelectSampleForm()
-    return render_to_response('testing_template.html', {'form': form})
+    return render(request, 'testing_template.html', {'form': form})
 
 
 def remove(request):
     import forms
-    form = forms.RemoveSampleForm()
-    return render_to_response('remove.html', {'form': form})
+
+    if request.method == "POST":
+        # take care of response
+        form = forms.RemoveSampleForm(request.POST)
+
+        messages = []
+
+        if form.is_valid():
+
+            for sample_name in form.samples_to_remove:
+
+                # TODO: removing results by 'sample_name'
+                # (following line is only a placeholder)
+                success = True
+
+                if success:
+                    messages.append({
+                        'title': 'Success!',
+                        'contents': '{0} removed'.format(sample_name),
+                        'type': 'success'
+                    })
+                else:
+                    messages.append({
+                        'contents': 'Unable to remove: {0}'.format(sample_name),
+                        'type': 'danger'
+                    })
+        else:
+            messages.append({
+                'contents': 'Your have to select at least one sample',
+                'type': 'info'
+            })
+
+        new_form = forms.RemoveSampleForm()
+
+        data = {'messages': messages,
+                'form': new_form}
+
+        return render(request, 'remove.html', data)
+    else:
+        # render empty form
+        form = forms.RemoveSampleForm()
+        return render(request, 'remove.html', {'form': form})
 
 
 def result_redirect(request):
@@ -121,4 +161,4 @@ def show_single_krona(request, krona_name):
     with open(krona_html_path) as f:
         html_source = f.readlines()
     return HttpResponse(html_source, content_type='text/html')
-    
+

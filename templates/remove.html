@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Remove - {% endblock %}
+{% block nav-remove %}active{% endblock %}
 
 {% block content %}
+  {% include "messages.html" with messages=messages %}
   <h1>Remove samples</h1>
   <p class="lead">Please, select samples of which results should be removed, and then click "Remove".</p>
   <p>Note, that <b>all</b> results related to given sample will be removed.</p>
-  <form name="remove-sample" method="get">
+  <form name="remove-sample" method="post">
+    {% csrf_token %}
     {{ form.as_p }}
     <br/>
     <input class="btn btn-danger btn-lg" type="submit" value="Remove">

@@ -44,7 +44,8 @@ class RemoveSampleForm(forms.Form):
     set_common_options(table, 'id_sample_to_remove')
 
     # Use BootstrapTableSelect widget here, instead of default Select widget
-    sample_to_remove = ChoiceField(choices=enumerate(sample_list), widget=table)
+    samples_to_remove = ChoiceField(choices=enumerate(sample_list),
+                                    widget=table)
 
 
 class SelectSampleForm(forms.Form):
