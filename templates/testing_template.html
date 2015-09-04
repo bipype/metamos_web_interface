@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Choose sample{% endblock %}
+{% block title %}Choose sample - {% endblock %}
 {% block nav-test %}active{% endblock %}
 
 {% block content %}
-  {#
+  <h1>Choose sample</h1>
+  {% comment %}
     <p class="lead">Jakiś jeden akapit o tym, co tu sie dzieje</p>
-  #}
+  {% endcomment %}
   <form name="select-sample" action="/biogaz/result_post/" method="get">
     {{ form.as_p }}
     <br/>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Remove{% endblock %}
+{% block title %}Remove - {% endblock %}
 
 {% block content %}
   <h1>Remove samples</h1>
@@ -8,6 +8,6 @@
   <form name="remove-sample" method="get">
     {{ form.as_p }}
     <br/>
-    <input class="btn btn-primary btn-lg" type="submit" value="Remove">
+    <input class="btn btn-danger btn-lg" type="submit" value="Remove">
   </form>
 {% endblock %}

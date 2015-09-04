@@ -16,7 +16,6 @@
       #main-content
       {
         padding: 40px 15px;
-        text-align: center;
       }
     </style>
 
@@ -26,11 +25,11 @@
     <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.8.1/bootstrap-table.min.css" rel="stylesheet">
 
-    {#
+    {% comment %}
       JavaScript files: jQuery, Bootstrap JavaScript and bootstrapTable:
       Placed here, at the begining, because bootstrapTable events should
       be loaded before any froms which would need to use these events.
-    #}
+    {% endcomment %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="{% static "js/bootstrap.min.js" %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.8.1/bootstrap-table.min.js"></script>
