@@ -1,5 +1,6 @@
 from django.forms import forms
 from django.forms.fields import ChoiceField
+from django.forms.fields import MultipleChoiceField
 from django.forms.widgets import Select
 from bootstrap_tables.widgets import BootstrapTableSelect
 from bootstrap_tables.widgets import BootstrapTableSelectMultiple
@@ -44,8 +45,8 @@ class RemoveSampleForm(forms.Form):
     set_common_options(table, 'id_sample_to_remove')
 
     # Use BootstrapTableSelect widget here, instead of default Select widget
-    samples_to_remove = ChoiceField(choices=enumerate(sample_list),
-                                    widget=table)
+    samples_to_remove = MultipleChoiceField(choices=enumerate(sample_list),
+                                            widget=table)
 
 
 class SelectSampleForm(forms.Form):
