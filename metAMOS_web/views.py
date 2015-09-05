@@ -72,19 +72,39 @@ def test(request):
 def remove(request):
     import forms
 
+    form = forms.RemoveSampleForm()
+
     if request.method == "POST":
         # take care of response
-        form = forms.RemoveSampleForm(request.POST)
 
         messages = []
 
-        if form.is_valid():
+        # Since construction of our widgets is slightly different, than
+        # construction of default ones** and validators are hardcoded for
+        # default widgets without other way to replace them than by subclassing
+        # *ChoiceField classes which would be redundant and ugly, validation
+        # is performed here without use of form.is_valid() function.
 
-            for sample_name in form.samples_to_remove:
+        # ** in BootstrapTableWidgets there are multiple columns allowed (so,
+        # items in .choices could be of any length) but the default widget
+        # (Select) always uses items with at most 2 elements in .choices
+        # and if there are 2 - they are treated as a group of options.
+
+        choices = form.fields['samples_to_remove'].widget.get_valid_choices()
+        selected = request.POST.get('samples_to_remove', [])
+
+        if selected:
+
+            for sample_name in selected:
+
+                is_valid = False
+                for choice in choices:
+                    if choice == sample_name:
+                        is_valid = True
 
                 # TODO: removing results by 'sample_name'
                 # (following line is only a placeholder)
-                success = True
+                success = is_valid
 
                 if success:
                     messages.append({
@@ -103,15 +123,12 @@ def remove(request):
                 'type': 'info'
             })
 
-        new_form = forms.RemoveSampleForm()
-
         data = {'messages': messages,
-                'form': new_form}
+                'form': form}
 
         return render(request, 'remove.html', data)
     else:
         # render empty form
-        form = forms.RemoveSampleForm()
         return render(request, 'remove.html', {'form': form})
 
 
