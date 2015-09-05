@@ -31,14 +31,14 @@ class BootstrapTableWidget(BootstrapTable, Widget):
     my_field = ChoiceField(choices=enumerate(my_list), widget=new_widget)
     """
 
-    def __init__(self, id_field, attrs=None, choices=()):
+    def __init__(self, field_to_send, attrs=None, choices=()):
         """
         Initializes parent classes BootstrapTable and Widget and sets some
         variables to allow imitating Select widget with use of BootstrapTable.
 
         Args:
 
-        id_field: name of field, from which value will be send to server,
+        field_to_send: name of field, from which value will be send to server,
         when submitting your form.
 
         attrs: standard Django's attributes, to pass into Widget initializer.
@@ -50,7 +50,39 @@ class BootstrapTableWidget(BootstrapTable, Widget):
         self._choices = None
         self.choices = list(choices)
         self.set(clickToSelect=True)
-        self.set(idField=id_field)
+        self.set(idField=field_to_send)
+
+    def get_valid_choices(self):
+        """
+        Returns list of choices, where values were restricted to these,
+        which might be send to server, when submitting your form.
+        """
+        # forgive me this long name, I really don't have any better idea
+        index = self.get_index_of_column_with_field_to_send()
+
+        # -1, since first column always will be added by subwidgets
+        # (the 'state' column with checkbox or radio)
+        # and shouldn't be used as column with values to send to server
+        index -= 1
+
+        if index < 0:
+            return []
+
+        return [choice_columns[index] for choice_columns in self.choices]
+
+    def get_index_of_column_with_field_to_send(self):
+        """
+        Returns index of column, from which value will be send to server,
+        when submitting your form. If column was not found, return -1.
+        """
+
+        id_field = self.get('idField')
+
+        for index, column in enumerate(self.columns.all()):
+            if id_field == column.all()['field']:
+                return index
+
+        return -1
 
     @property
     def choices(self):
@@ -120,17 +152,21 @@ class BootstrapTableSelect(BootstrapTableWidget):
     """
     Extends BootstrapTableWidget class, to imitate Select widget (single choice
     available only - it uses input of radio type)
+
+    Note, that column of field name 'STATE' is reserved for use by the widget.
     """
     def __init__(self, id_field, attrs=None, choices=()):
         BootstrapTableWidget.__init__(self, id_field, attrs, choices)
-        self.columns.add(field='state', radio=True)
+        self.columns.add(field='STATE', radio=True)
 
 
 class BootstrapTableSelectMultiple(BootstrapTableWidget):
     """
     Extends BootstrapTableWidget class, to imitate SelectMultiple widget
     (with multiple choice available - it uses input of checkbox type)
+
+    Note, that column of field name 'STATE' is reserved for use by the widget.
     """
     def __init__(self, id_field, attrs=None, choices=()):
         BootstrapTableWidget.__init__(self, id_field, attrs, choices)
-        self.columns.add(field='state', checkbox=True)
+        self.columns.add(field='STATE', checkbox=True)
