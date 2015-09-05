@@ -91,7 +91,7 @@ def remove(request):
         # and if there are 2 - they are treated as a group of options.
 
         choices = form.fields['samples_to_remove'].widget.get_valid_choices()
-        selected = request.POST.get('samples_to_remove', [])
+        selected = dict(request.POST).get('samples_to_remove', [])
 
         if selected:
 
