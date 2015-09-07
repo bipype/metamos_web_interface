@@ -58,9 +58,11 @@ def index(request):
 
 
 # amplicon results
-def new(request):
+def new(request, messages=[]):
     form = forms.SelectSampleForm()
-    return render(request, 'new_job.html', {'form': form})
+    data = {'messages': messages,
+            'form': form}
+    return render(request, 'new_job.html', data)
 
 
 # view for testing
@@ -72,10 +74,10 @@ def test(request):
 def remove(request):
     form = forms.RemoveSampleForm()
 
+    messages = []
+
     if request.method == "POST":
         # take care of response
-
-        messages = []
 
         # Since construction of our widgets is slightly different, than
         # construction of default ones** and validators are hardcoded for
@@ -122,16 +124,20 @@ def remove(request):
                     'type': 'warning'
                 })
 
-        data = {'messages': messages,
-                'form': form}
+    data = {'messages': messages,
+            'form': form}
 
-        return render(request, 'remove.html', data)
-    else:
-        # render empty form
-        return render(request, 'remove.html', {'form': form})
+    return render(request, 'remove.html', data)
 
 
 def result_redirect(request):
+    # if sample wasn't selected, show the form again, with warning this time
+    if 'selected_sample' not in request.GET:
+        warning = {
+            'contents': 'Your have to select at least one sample',
+            'type': 'info'
+        }
+        return new(request, messages=[warning])
     sample_source, sample_id = request.GET['selected_sample'].split('/')
     bipype_variant = 'bipype_' + request.GET['selected_bipype_variant'] + '_' + sample_source.lower()
     return HttpResponseRedirect('/biogaz/result/' + sample_id + '/' + bipype_variant)

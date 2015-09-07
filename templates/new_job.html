@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Choose sample - {% endblock %}
+{% block title %}Choose a sample - {% endblock %}
 {% block nav-new %}active{% endblock %}
 
 {% block content %}
+  {% include "messages.html" with messages=messages %}
   <h1>Choose a sample</h1>
   {% comment %}
     <p class="lead">Jakiś jeden akapit o tym, co tu sie dzieje</p>
