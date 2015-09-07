@@ -1,7 +1,7 @@
 import os
 import sys
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
@@ -54,7 +54,7 @@ KRONA_HTML_POSTFIX = """
 # Create your views here.
 # main page
 def index(request):
-    return render_to_response('index.html')
+    return render(request, 'index.html')
 
 
 # amplicon results
@@ -146,11 +146,11 @@ def result(request, sample_id, bipype_variant):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
         daemon.check_and_add_sample(sample_id, bipype_variant)
-        return render_to_response('wait.html')
+        return render(request, 'wait.html')
     else:
         if not os.path.exists(krona_xml_path):
             daemon.check_and_add_sample(sample_id, bipype_variant)
-            return render_to_response('wait.html')
+            return render(request, 'wait.html')
         else:
             os.system(
                     'PERL5LIB=/home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona /home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona/ImportXML.pl' + \
@@ -163,7 +163,7 @@ def result(request, sample_id, bipype_variant):
 # show files from output_analys
 def show_krona_list(request):
     krona_list = [i for i in os.listdir(OUTPUT_ANALYSES_PATH) if 'krona' in i]
-    return render_to_response('output_analyses.html', {'krona_list': krona_list})
+    return render(request, 'output_analyses.html', {'krona_list': krona_list})
 
 def show_single_krona(request, krona_name):
     krona_xml_path = os.path.join(OUTPUT_ANALYSES_PATH, krona_name)
