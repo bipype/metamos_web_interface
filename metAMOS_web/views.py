@@ -1,14 +1,14 @@
-from django.core.mail.message import SafeMIMEMultipart
+import os
+import sys
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, render_to_response
-import os, sys
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
 
 import daemon
-from paths import SAMPLE_PATH, KRONA_PATH, OUTPUT_ANALYSES_PATH
-from models import SelectSampleForm, SampleResults
+from paths import SAMPLE_PATH, OUTPUT_ANALYSES_PATH
+import forms
 
 #with open('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web/krona-2.0.js') as f:
 #    KRONA_JS_SRC = f.read()
@@ -56,22 +56,20 @@ KRONA_HTML_POSTFIX = """
 def index(request):
     return render_to_response('index.html')
 
+
 # amplicon results
 def new(request):
-    form = SelectSampleForm()
-    return render_to_response('new_job.html', {'form': form})
+    form = forms.SelectSampleForm()
+    return render(request, 'new_job.html', {'form': form})
 
 
 # view for testing
 def test(request):
-    import forms
-    form = forms.SelectSampleForm()
+    form = forms.MetatranscriptomicsForm()
     return render(request, 'testing_template.html', {'form': form})
 
 
 def remove(request):
-    import forms
-
     form = forms.RemoveSampleForm()
 
     if request.method == "POST":

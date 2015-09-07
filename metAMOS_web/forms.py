@@ -39,6 +39,10 @@ def set_common_options(table, field_id):
     table.columns.add(field='sample', title='Name', sortable=True)
 
 
+class MetatranscriptomicsForm(forms.Form):
+    pass
+
+
 class RemoveSampleForm(forms.Form):
 
     table = BootstrapTableSelectMultiple('sample')
