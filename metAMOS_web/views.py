@@ -93,18 +93,19 @@ def remove(request):
         choices = form.fields['samples_to_remove'].widget.get_valid_choices()
         selected = dict(request.POST).get('samples_to_remove', [])
 
-        if selected:
+        if not selected:
+            messages.append({
+                'contents': 'Your have to select at least one sample',
+                'type': 'info'
+            })
 
-            for sample_name in selected:
+        for sample_name in selected:
 
-                is_valid = False
-                for choice in choices:
-                    if choice == sample_name:
-                        is_valid = True
+            if sample_name in choices:
 
                 # TODO: removing results by 'sample_name'
                 # (following line is only a placeholder)
-                success = is_valid
+                success = True
 
                 if success:
                     messages.append({
@@ -117,11 +118,11 @@ def remove(request):
                         'contents': 'Unable to remove: {0}'.format(sample_name),
                         'type': 'danger'
                     })
-        else:
-            messages.append({
-                'contents': 'Your have to select at least one sample',
-                'type': 'info'
-            })
+            else:
+                messages.append({
+                    'contents': "Sample {0} doesn't exists".format(sample_name),
+                    'type': 'warning'
+                })
 
         data = {'messages': messages,
                 'form': form}

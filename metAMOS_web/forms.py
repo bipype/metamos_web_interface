@@ -42,7 +42,7 @@ def set_common_options(table, field_id):
 class RemoveSampleForm(forms.Form):
 
     table = BootstrapTableSelectMultiple('sample')
-    set_common_options(table, 'id_sample_to_remove')
+    set_common_options(table, 'id_samples_to_remove')
 
     # Use BootstrapTableSelect widget here, instead of default Select widget
     samples_to_remove = MultipleChoiceField(choices=enumerate(sample_list),
