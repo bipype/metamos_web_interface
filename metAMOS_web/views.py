@@ -140,7 +140,7 @@ def result_redirect(request):
 
 def result(request, sample_id, bipype_variant):
     sample_source = bipype_variant.split('_')[-1].upper()
-    output_path = os.path.join(SAMPLE_PATH[sample_source], sample_id, 'bipype_output', bipype_variant)
+    output_path = os.path.join(SAMPLE_PATH[sample_source], sample_id.rstrip('.fastq'), 'bipype_output', bipype_variant)
     krona_xml_path = os.path.join(SAMPLE_PATH[sample_source], sample_id, 'bipype_output', bipype_variant + '/krona.html')
     krona_html_path = os.path.join(SAMPLE_PATH[sample_source], sample_id, 'bipype_output', bipype_variant + '/krona.xml.html')
     if os.path.exists(krona_html_path):

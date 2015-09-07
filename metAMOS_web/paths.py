@@ -1,6 +1,6 @@
 # file paths
 SAMPLE_PATH = {
-        'test_samples': '/home/pszczesny/storage/test_samples',
+        'TEST': '/home/pszczesny/storage/test_samples',
         #'ITS': '/home/pszczesny/storage/20140519_data/amp/ITS',
         #'16S': '/home/pszczesny/storage/20140519_data/amp/16S',
         }
