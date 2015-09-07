@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
+    {% block header %}{% endblock %}
     <title>{% block title %}{% endblock %}Biogazownia</title>
 
     {# Custom CSS #}
@@ -57,7 +58,7 @@
 
           <ul class="nav navbar-nav">
             <li class="{% block nav-home %}{% endblock %}"><a href="/biogaz/#">Home</a></li>
-            <li class="{% block nav-new %}{% endblock %}"><a href="/biogaz/new">Choose sample</a></li>
+            <li class="{% block nav-new %}{% endblock %}"><a href="/biogaz/new">Choose a sample</a></li>
             {# TODO: following links should be removed just before 'publication' #}
             <li class="{% block nav-remove %}{% endblock %}"><a href="/biogaz/remove">Remove</a></li>
             <li class="{% block nav-test %}{% endblock %}"><a href="/biogaz/test">Test</a></li>
