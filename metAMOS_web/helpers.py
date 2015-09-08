@@ -2,6 +2,32 @@
 import os
 from paths import SAMPLE_PATH, WORKFLOWS_PATH
 
+
+def create_krona_html(input_xml_path, output_html_path):
+    os.system(
+            'PERL5LIB=/home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona /home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona/ImportXML.pl'
+            + input_xml_path + ' -o ' + output_html_path
+            )
+
+
+def get_krona_paths(output_dir):
+    krona_xml_path = os.path.join(output_dir, 'krona.xml')
+    krona_html_path = os.path.join(output_dir, 'krona.html')
+    return krona_xml_path, krona_html_path
+
+
+def get_sample_dir(sample_id, type_of_analysis):
+    sample_source = type_of_analysis.split('_')[-1].upper()
+    return os.path.join(SAMPLE_PATH[sample_source], sample_id.rstrip('.fastq'))
+
+
+def get_output_dir(sample_id, type_of_analysis):
+    sample_dir = get_sample_dir(sample_id, type_of_analysis)
+    return os.path.join(sample_dir,
+                        'bipype_output',
+                        type_of_analysis)
+
+
 def get_bipype_variant_list():
     return [i for i in os.listdir(WORKFLOWS_PATH) if i.startswith('bipype_')]
 

@@ -11,3 +11,4 @@ class SampleResults(models.Model):
     variant = models.CharField(max_length=256)
     job_started = models.BooleanField(default=False)
     job_completed = models.BooleanField(default=False)
+    progress = models.IntegerField(default=0)

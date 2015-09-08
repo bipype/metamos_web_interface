@@ -1,9 +1,45 @@
 {% extends "base.html" %}
 {% block title %}Running - {% endblock %}
-{% block header %}<meta http-equiv="refresh" content="5">{% endblock %}
 
 {% block content %}
   {% include "messages.html" with messages=messages %}
   <h1>Calculating. Please wait.</h1>
-  <p>Liczy się, strona odświeży się za kilka sekund...</p>
+  <p>Liczy się, strona sama się aktualizować będzie...</p>
+  <div class="progress">
+    <div class="progress-bar progress-bar-striped active"
+         id="progressbar"
+         role="progressbar"
+         aria-valuenow="0"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         style="width: 0%">
+      <span class="sr-only" id="progressbar-text">0% Complete</span>
+    </div>
+  </div>
+  <script type="text/javascript">
+    var url = "/biogaz/get_status/{{ sample_id }}/{{ type_of_analysis }}";
+
+    function progress(value)
+    {
+      $('#progressbar').css('width', value+'%').attr('aria-valuenow', value);
+    }
+
+    function update_status()
+    {
+      $.getJSON(url, function(data)
+      {
+        value = data["state"];
+        progress(value);
+        if(value == 100)
+        {
+          location.reload();
+        }
+      });
+    }
+
+    $(document).ready(function()
+    {
+      var updater_handle = setInterval(update_status, 5000);
+    });
+  </script>
 {% endblock %}

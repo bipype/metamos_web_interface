@@ -1,14 +1,16 @@
 import os
 import sys
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
 
 import daemon
-from paths import SAMPLE_PATH, OUTPUT_ANALYSES_PATH
+from paths import OUTPUT_ANALYSES_PATH
 import forms
+import helpers
+import models
 
 #with open('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web/krona-2.0.js') as f:
 #    KRONA_JS_SRC = f.read()
@@ -134,7 +136,7 @@ def result_redirect(request):
     # if sample wasn't selected, show the form again, with warning this time
     if 'selected_sample' not in request.GET:
         warning = {
-            'contents': 'Your have to select at least one sample',
+            'contents': 'Your have to select a sample',
             'type': 'info'
         }
         return new(request, messages=[warning])
@@ -142,29 +144,37 @@ def result_redirect(request):
     bipype_variant = 'bipype_' + request.GET['selected_bipype_variant'] + '_' + sample_source.lower()
     return HttpResponseRedirect('/biogaz/result/' + sample_id + '/' + bipype_variant)
 
-def result(request, sample_id, bipype_variant):
-    sample_source = bipype_variant.split('_')[-1].upper()
-    output_path = os.path.join(SAMPLE_PATH[sample_source], sample_id.rstrip('.fastq'), 'bipype_output', bipype_variant)
-    krona_xml_path = os.path.join(SAMPLE_PATH[sample_source], sample_id, 'bipype_output', bipype_variant + '/krona.html')
-    krona_html_path = os.path.join(SAMPLE_PATH[sample_source], sample_id, 'bipype_output', bipype_variant + '/krona.xml.html')
-    if os.path.exists(krona_html_path):
-        os.remove(krona_html_path)
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-        daemon.check_and_add_sample(sample_id, bipype_variant)
-        return render(request, 'wait.html')
+
+def get_status(request, sample_id, type_of_analysis):
+    sample = models.SampleResults.objects.get(sample=sample_id, variant=type_of_analysis)
+    return JsonResponse({'status': sample.progress})
+
+
+def result(request, sample_id, type_of_analysis):
+
+    data = {'sample_id': sample_id,
+            'type_of_analysis': type_of_analysis}
+
+    output_dir = helpers.get_output_dir(sample_id, type_of_analysis)
+    krona_xml_path, krona_html_path = helpers.get_krona_paths(output_dir)
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        daemon.check_and_add_sample(sample_id, type_of_analysis)
+        return render(request, 'wait.html', data)
     else:
         if not os.path.exists(krona_xml_path):
-            daemon.check_and_add_sample(sample_id, bipype_variant)
-            return render(request, 'wait.html')
+            daemon.check_and_add_sample(sample_id, type_of_analysis)
+            return render(request, 'wait.html', data)
         else:
-            os.system(
-                    'PERL5LIB=/home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona /home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona/ImportXML.pl' + \
-                            krona_xml_path + ' -o ' + krona_html_path
-                    )
+            if not os.path.exists(krona_html_path):
+                helpers.create_krona_html(krona_xml_path, krona_html_path)
             with open(krona_html_path) as f:
                 html_source = f.read()
         return HttpResponse(html_source, content_type='text/html')
+
+
+
 
 # show files from output_analys
 def show_krona_list(request):
