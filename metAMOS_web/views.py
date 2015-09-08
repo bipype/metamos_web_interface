@@ -1,6 +1,6 @@
 import os
 import sys
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
@@ -146,8 +146,10 @@ def result_redirect(request):
 
 
 def get_status(request, sample_id, type_of_analysis):
+    import json
     sample = models.SampleResults.objects.get(sample=sample_id, variant=type_of_analysis)
-    return JsonResponse({'status': sample.progress})
+    to_json = {'status': sample.progress}
+    return HttpResponse(json.dumps(to_json), mimetype='application/json')
 
 
 def result(request, sample_id, type_of_analysis):
