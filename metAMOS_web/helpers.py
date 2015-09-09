@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 import os
 from paths import SAMPLE_PATH, WORKFLOWS_PATH
+import models
+
+
+def get_progress(**kwargs):
+
+    from django.core.exceptions import ObjectDoesNotExist
+
+    try:
+        sample = models.SampleResults.objects.get(**kwargs)
+        progress = sample.progress
+    except ObjectDoesNotExist:
+        progress = 0
+
+    return progress
 
 
 def create_krona_html(input_xml_path, output_html_path):

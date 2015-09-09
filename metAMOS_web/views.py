@@ -9,7 +9,6 @@ sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interfac
 import daemon
 import forms
 import helpers
-import models
 
 
 # main page
@@ -105,15 +104,18 @@ def result_redirect(request):
 
 def get_status(request, sample_id, type_of_analysis):
     import json
-    sample = models.SampleResults.objects.get(sample=sample_id, variant=type_of_analysis)
-    to_json = {'status': sample.progress}
+    progress = helpers.get_progress(sample=sample_id, variant=type_of_analysis)
+    to_json = {'status': progress}
     return HttpResponse(json.dumps(to_json), mimetype='application/json')
 
 
 def result(request, sample_id, type_of_analysis):
 
+    progress = helpers.get_progress(sample=sample_id, variant=type_of_analysis)
+
     data = {'sample_id': sample_id,
-            'type_of_analysis': type_of_analysis}
+            'type_of_analysis': type_of_analysis,
+            'progress': progress}
 
     output_dir = helpers.get_output_dir(sample_id, type_of_analysis)
     krona_xml_path, krona_html_path = helpers.get_krona_paths(output_dir)
