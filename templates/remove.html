@@ -12,7 +12,6 @@
   <form name="remove-sample" method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <br/>
     <button type="submit" class="btn btn-danger btn-lg">
       <span class="glyphicon glyphicon-trash" aria-hidden="true"></span> Remove results
     </button>
