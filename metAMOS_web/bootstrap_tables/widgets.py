@@ -118,7 +118,7 @@ class BootstrapTableWidget(BootstrapTable, Widget):
 
             output += self.js_select_by_values(attrs['id'], values)
 
-        return mark_safe(output)
+        return mark_safe(unicode(output))
 
     def js_select_by_values(self, my_id, values):
         """
