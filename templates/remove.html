@@ -5,9 +5,9 @@
 {% block content %}
   {% include "messages.html" with messages=messages %}
   <h1>Remove results</h1>
-  <p class="lead">To remove results of analysis performed on given samples,
+  <p>To remove results of analysis performed on given samples,
     select samples in table below and then click "Remove results".</p>
-  <p>Note, that <b>all</b> results related to given sample will be permanently
+  <p>Note, that <mark>all</mark> results related to given sample will be permanently
     removed from database and from storage on the server.</p>
   <form name="remove-sample" method="post">
     {% csrf_token %}
