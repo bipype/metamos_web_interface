@@ -16,6 +16,47 @@ bipype_variant_list = get_workflow_pretty_names()
 sample_list = get_pretty_sample_list()
 
 
+def field_with_bootstrap_class(field, **kwargs):
+    """
+    A decorator which initializes given field, adding 'form-control' class
+    to its widget, so this field will be displayed nicely in a form.
+
+    Args:
+        field - a django field (class derived from django.forms.fields.Field,
+            like: BooleanField, CharField)
+
+    Keyword args:
+        widget - allows to pass custom widget to given field; note that both:
+            classes and instances derived from django.forms.widgets.Widget are
+            allowed here. If an instance is detected, the function will append
+            form-control class to existing attributes, without overwriting them.
+        All other keyword arguments will be passed to field's initializer.
+    """
+    from inspect import isclass
+    from django.forms.widgets import Widget
+    from django.forms.fields import Field
+
+    assert isclass(field) and issubclass(field, Field)
+
+    classes = 'form-control'
+
+    widget = kwargs.pop('widget', False) or field.widget
+
+    if isclass(widget) and issubclass(widget, Widget):
+        widget = widget(attrs={'class': classes})
+    elif isinstance(widget, Widget):
+        old_class = widget.attrs.get('class', '')
+        classes = ' '.join(filter(bool, [old_class, classes]))
+        widget.attrs.update({'class': classes})
+    else:
+        raise TypeError('widget should be a class or an instance of class '
+                        'derived from django.forms.widgets.Widget')
+
+    kwargs['widget'] = widget
+
+    return field(**kwargs)
+
+
 def set_common_options(table, field_id):
     """
     On object 'table' of class BootstrapTableWidget or subclasses set common
@@ -85,41 +126,3 @@ class RemoveSampleForm(forms.Form):
     samples_to_remove = MultipleChoiceField(choices=enumerate(sample_list),
                                             widget=table)
 
-
-def field_with_bootstrap_class(field, **kwargs):
-    """
-    A decorator which initializes given field, adding 'form-control' class
-    to its widget, so this field will be displayed nicely in a form.
-
-    Args:
-        field - a django field (class derived from django.forms.fields.Field,
-            like: BooleanField, CharField)
-
-    Keyword args:
-        widget - allows to pass custom widget to given field; note that both:
-            classes and instances derived from django.forms.widgets.Widget are
-            allowed here. If an instance is detected, the function will append
-            form-control class to existing attributes, without overwriting them.
-        All other keyword arguments will be passed to field's initializer.
-    """
-    from inspect import isclass
-    from django.forms.widgets import Widget
-    from django.forms.fields import Field
-
-    assert isclass(field) and issubclass(field, Field)
-
-    classes = 'form-control'
-
-    widget = kwargs.pop('widget', False) or field.widget
-
-    if isclass(widget) and issubclass(widget, Widget):
-        widget = widget(attrs={'class': classes})
-    elif isinstance(widget, Widget):
-        old_class = widget.attrs.get('class', '')
-        classes = ' '.join(filter(bool, [old_class, classes]))
-        widget.attrs.update({'class': classes})
-    else:
-        raise TypeError('widget should be a class or an instance of class '
-                        'derived from django.forms.widgets.Widget')
-
-    return field(kwargs, widget=widget)
