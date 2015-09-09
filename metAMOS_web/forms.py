@@ -1,7 +1,8 @@
 from django.forms import forms
 from django.forms.fields import ChoiceField
+from django.forms.fields import CharField
+from django.forms.fields import BooleanField
 from django.forms.fields import MultipleChoiceField
-from django.forms.widgets import Select
 from bootstrap_tables.widgets import BootstrapTableSelect
 from bootstrap_tables.widgets import BootstrapTableSelectMultiple
 
@@ -39,8 +40,40 @@ def set_common_options(table, field_id):
     table.columns.add(field='sample', title='Name', sortable=True)
 
 
+class SelectSampleForm(forms.Form):
+    """
+    Create form allowing to choose our sample and type of analysis. Fields of
+    this form are created outside __init__, so they aren't dynamically generated
+
+    This form (if used in <form> with 'get' method) will generate response like:
+    ?selected_bipype_variant=A&selected_sample=B, where:
+        A belongs to bipype_variant_list,
+        B belongs to sample_list
+    """
+    selected_bipype_variant = field_with_bootstrap_class(
+        ChoiceField,
+        choices=zip(bipype_variant_list, bipype_variant_list),
+        label='Type of analysis')
+
+    table = BootstrapTableSelect('sample')
+    set_common_options(table, 'id_selected_sample')
+
+    # Use BootstrapTableSelect widget here, instead of default Select widget.
+    # Note, that fields created with widgets from bootstrap_tables package
+    # doesn't need to be wrapped with field_with_bootstrap_class() function.
+    selected_sample = ChoiceField(choices=enumerate(sample_list), widget=table)
+
+
 class MetatranscriptomicsForm(forms.Form):
-    pass
+
+    table = BootstrapTableSelectMultiple('sample')
+    set_common_options(table, 'id_selected_files')
+
+    generate_csv = field_with_bootstrap_class(BooleanField)
+    reference_condition = field_with_bootstrap_class(CharField)
+
+    # Use BootstrapTableSelect widget here, instead of default Select widget
+    selected_files = ChoiceField(choices=enumerate(sample_list), widget=table)
 
 
 class RemoveSampleForm(forms.Form):
@@ -53,24 +86,40 @@ class RemoveSampleForm(forms.Form):
                                             widget=table)
 
 
-class SelectSampleForm(forms.Form):
+def field_with_bootstrap_class(field, **kwargs):
     """
-    Create form allowing to choose our sample and type of analysis. Fields of
-    this form are created outside __init__, so they aren't dynamically generated
+    A decorator which initializes given field, adding 'form-control' class
+    to its widget, so this field will be displayed nicely in a form.
 
-    This form (if used in <form> with 'get' method) will generate response like:
-    ?selected_bipype_variant=A&selected_sample=B, where:
-        A belongs to bipype_variant_list,
-        B belongs to sample_list
+    Args:
+        field - a django field (class derived from django.forms.fields.Field,
+            like: BooleanField, CharField)
+
+    Keyword args:
+        widget - allows to pass custom widget to given field; note that both:
+            classes and instances derived from django.forms.widgets.Widget are
+            allowed here. If an instance is detected, the function will append
+            form-control class to existing attributes, without overwriting them.
+        All other keyword arguments will be passed to field's initializer.
     """
-    selected_bipype_variant = ChoiceField(
-        choices=zip(bipype_variant_list, bipype_variant_list),
-        label='Type of analysis',
-        widget=Select(attrs={'class': 'form-control'})
-    )
+    from inspect import isclass
+    from django.forms.widgets import Widget
+    from django.forms.fields import Field
 
-    table = BootstrapTableSelect('sample')
-    set_common_options(table, 'id_selected_sample')
+    assert isclass(field) and issubclass(field, Field)
 
-    # Use BootstrapTableSelect widget here, instead of default Select widget
-    selected_sample = ChoiceField(choices=enumerate(sample_list), widget=table)
+    classes = 'form-control'
+
+    widget = kwargs.pop('widget', False) or field.widget
+
+    if isclass(widget) and issubclass(widget, Widget):
+        widget = widget(attrs={'class': classes})
+    elif isinstance(widget, Widget):
+        old_class = widget.attrs.get('class', '')
+        classes = ' '.join(filter(bool, [old_class, classes]))
+        widget.attrs.update({'class': classes})
+    else:
+        raise TypeError('widget should be a class or an instance of class '
+                        'derived from django.forms.widgets.Widget')
+
+    return field(kwargs, widget=widget)
