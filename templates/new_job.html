@@ -1,16 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Choose a sample - {% endblock %}
+{% block title %}View results - {% endblock %}
 {% block nav-new %}active{% endblock %}
 
 {% block content %}
   {% include "messages.html" with messages=messages %}
-  <h1>Choose a sample</h1>
-  {% comment %}
-    <p class="lead">Jakiś jeden akapit o tym, co tu sie dzieje</p>
-  {% endcomment %}
+  <h1>View results</h1>
+  <p cl1ass="lead">To get results of analysis performed on given sample,
+    choose type of analysis, select one sample (in table below) and press
+    'Show results' button.
+  </p>
+  <p>
+    Note, that if there are no results associated with particular sample,
+    they will be calculated and prepared, just after your request to show
+    these results. This might take a while, depending on size of your sample.
+  </p>
   <form name="select-sample" action="/biogaz/result_post/" method="get">
     {{ form.as_p }}
     <br/>
-    <input class="btn btn-primary btn-lg" type="submit" value="Sprawdź wyniki">
+    <input class="btn btn-primary btn-lg" type="submit" value="Show results">
   </form>
 {% endblock %}

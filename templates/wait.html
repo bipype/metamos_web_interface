@@ -3,8 +3,9 @@
 
 {% block content %}
   {% include "messages.html" with messages=messages %}
-  <h1>Calculating. Please wait.</h1>
-  <p>Liczy się, strona sama się aktualizować będzie...</p>
+  <h1>Calculating, please wait.</h1>
+  <p>This page will refresh itself automatically. You can save url of this page,
+  for example as a bookmark, and check results later using the same address.</p>
   <div class="progress">
     <div class="progress-bar progress-bar-striped active"
          id="progressbar"
@@ -22,13 +23,14 @@
     function progress(value)
     {
       $('#progressbar').css('width', value+'%').attr('aria-valuenow', value);
+      $('#progressbar-text').text(value + '% complete')
     }
 
     function update_status()
     {
       $.getJSON(url, function(data)
       {
-        value = data["state"];
+        value = data.status;
         progress(value);
         if(value == 100)
         {
@@ -39,7 +41,7 @@
 
     $(document).ready(function()
     {
-      var updater_handle = setInterval(update_status, 5000);
+      setInterval(update_status, 5000);
     });
   </script>
 {% endblock %}

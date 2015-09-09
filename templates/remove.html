@@ -4,13 +4,17 @@
 
 {% block content %}
   {% include "messages.html" with messages=messages %}
-  <h1>Remove samples</h1>
-  <p class="lead">Please, select samples of which results should be removed, and then click "Remove".</p>
-  <p>Note, that <b>all</b> results related to given sample will be removed.</p>
+  <h1>Remove results</h1>
+  <p class="lead">To remove results of analysis performed on given samples,
+    select samples in table below and then click "Remove results".</p>
+  <p>Note, that <b>all</b> results related to given sample will be permanently
+    removed from database and from storage on the server.</p>
   <form name="remove-sample" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <br/>
-    <input class="btn btn-danger btn-lg" type="submit" value="Remove">
+    <button type="submit" class="btn btn-danger btn-lg">
+      <span class="glyphicon glyphicon-trash" aria-hidden="true"></span> Remove results
+    </button>
   </form>
 {% endblock %}
