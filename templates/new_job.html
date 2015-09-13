@@ -13,7 +13,8 @@
     they will be calculated and prepared, just after your request to show
     these results. This might take a while, depending on size of your sample.
   </p>
-  <form name="select-sample" action="/biogaz/result_post/" method="get">
+  <form name="select-sample" method="post">
+    {% csrf_token %}
     {{ form.as_p }}
     <input class="btn btn-primary btn-lg" type="submit" value="Show results">
   </form>

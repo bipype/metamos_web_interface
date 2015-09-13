@@ -5,7 +5,7 @@
   {% include "messages.html" with messages=messages %}
   <h1>Calculating, please wait.</h1>
   <p>This page will refresh itself automatically. You can save url of this page,
-  for example as a bookmark, and check results later using the same address.</p>
+  and check results later using the same address.</p>
   <div class="progress">
     <div class="progress-bar progress-bar-striped active"
          id="progressbar"
@@ -17,8 +17,18 @@
       <span class="sr-only" id="progressbar-text">{{ progress }}% Complete</span>
     </div>
   </div>
+  <p>
+      <button type="button" class="btn btn-default btn-xs" onclick="$(this).hide();$('#state').show()">
+          Show state
+      </button>
+  </p>
+  <div class="alert alert-info" role="alert" id="state" style="display:none">
+      Your job is {{ state }}
+  </div>
+  <div id="errors" style="display:none"></div>
   <script type="text/javascript">
-    var url = "/biogaz/get_status/{{ sample_id }}/{{ type_of_analysis }}";
+    var url_end = "{{ path }}/{{ type_of_analysis }}"
+    var url = "/biogaz/get_status/" + url_end;
 
     function progress(value)
     {
@@ -30,12 +40,32 @@
     {
       $.getJSON(url, function(data)
       {
-        value = data.status;
+        value = data.progress;
         progress(value);
         if(value == 100)
         {
           location.reload();
         }
+        
+        state = data.state;
+        if(state == "failed")
+        {
+          $("#state").addClass("alert-danger")
+          $("#state").html("Unfortunately, this job failed. To launch it again, " +
+          "<a href='javascript:window.location.href=window.location.href'>refresh</a> this page.")
+          $("#state").show()
+          if (data.error)
+          {
+           $("#errors").text(data.error)
+           $("#errors").show()
+          }
+        }
+        else
+        {
+            $("#state").text("Your job is " + state)
+        }
+
+        error = data.state;
       });
     }
 
