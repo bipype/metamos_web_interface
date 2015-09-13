@@ -3,6 +3,13 @@ Provides widgets to be used as replacements for Django's Select and
 SelectMultiple widgets, implemented with use of BootstrapTable.
 
 This version was written for Django 1.4.*.
+
+These widgets are slightly different, more complex than of default ones;
+because validators in fields: ChoiceField and MultipleChoiceField are hardcoded
+for default widgets, keep in mind, that widgets from this module used with
+default fields will block proper validation of form by is_valid() method.
+To be able to perform validation, please use fields from bootstrap_table.fields:
+BootstrapTableChoiceField and BootstrapTableMultipleChoiceField.
 """
 
 
