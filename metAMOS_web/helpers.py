@@ -71,10 +71,16 @@ def make_unique_dir(parent_dir):
 
 
 def encode_path(path):
-    return urllib.quote(path, safe='')
+    """
+    Yes, it is encoded and decoded twice; it's due to some restrictions
+    within Apache servers; check: http://www.leakon.com/archives/865
+    """
+    path = urllib.quote(path, safe='')
+    return  urllib.quote(path, safe='')
 
 
 def decode_path(path):
+    path = urllib.unquote(path)
     return urllib.unquote(path)
 
 
