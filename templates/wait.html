@@ -27,8 +27,7 @@
   </div>
   <div id="errors" style="display:none"></div>
   <script type="text/javascript">
-    var url_end = "{{ path }}/{{ type_of_analysis }}"
-    var url = "/biogaz/get_status/" + url_end;
+    var url = "/biogaz/get_status/{{ path }}/{{ type_of_analysis }}";
 
     function progress(value)
     {

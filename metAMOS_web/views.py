@@ -45,7 +45,7 @@ def new(request):
 
 def new_meta(request):
 
-    form = forms.MetatranscriptomicsForm(dict(request.POST) or None)
+    form = forms.MetatranscriptomicsForm(request.POST or None)
 
     if form.is_valid():
 
@@ -81,7 +81,7 @@ def remove(request):
 
     messages = []
 
-    form = forms.RemoveSampleForm(dict(request.POST) or None)
+    form = forms.RemoveSampleForm(request.POST or None)
 
     if form.is_valid():
 
@@ -109,12 +109,13 @@ def remove(request):
                 messages.append({
                     'title': 'Nothing to do!',
                     'contents': 'There are no results associated with '
-                                '{0} in database'.format(sample_name),
+                                '{0} in the database'.format(sample_name),
                     'type': 'info'
                 })
             else:
                 messages.append({
-                    'contents': 'Unable to remove results!'
+                    'title': 'Operation failed',
+                    'contents': 'Unable to remove results '
                                 'associated with: {0}'.format(sample_name),
                     'type': 'danger'
                 })
@@ -147,9 +148,6 @@ def get_status(request, path, type_of_analysis):
 
 
 def show_html(file_path):
-    # TODO: jesli czas pozwoli: zamiast wyswietlac html mozna zrobic szablon
-    # ktory bedzie wyswietlaj je w ramce iframe, przez co bbedzie to fajniej
-    # wygladac
     with open(file_path) as f:
         html_source = f.read()
     return HttpResponse(html_source, content_type='text/html')

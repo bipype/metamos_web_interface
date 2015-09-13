@@ -12,7 +12,7 @@ To be able to perform validation, please use fields from bootstrap_table.fields:
 BootstrapTableChoiceField and BootstrapTableMultipleChoiceField.
 """
 
-
+from django.utils.datastructures import MultiValueDict, MergeDict
 from django.forms.widgets import Widget
 from django.utils.safestring import mark_safe
 from bootstrap_tables import BootstrapTable
@@ -177,3 +177,11 @@ class BootstrapTableSelectMultiple(BootstrapTableWidget):
     def __init__(self, id_field, attrs=None, choices=()):
         BootstrapTableWidget.__init__(self, id_field, attrs, choices)
         self.columns.add(field='STATE', checkbox=True)
+
+    def value_from_datadict(self, data, files, name):
+        """
+        This is the same as SelectMultiple.value_from_datadict()
+        """
+        if isinstance(data, (MultiValueDict, MergeDict)):
+            return data.getlist(name)
+        return data.get(name, None)

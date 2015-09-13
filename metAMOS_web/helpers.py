@@ -2,19 +2,21 @@
 import os
 import urllib
 from tempfile import mkdtemp
-from django.core.exceptions import ObjectDoesNotExist
 from paths import SAMPLE_PATH, WORKFLOWS_PATH
 from metAMOS_web.models import Results
 from django.forms.forms import pretty_name
+from django.utils.safestring import mark_safe
 import job_manager
 
 
 def errors_to_messages(errors):
     messages = []
     for field, error in errors.iteritems():
+        title = '<u>{0}</u> needs a correction:'.format(pretty_name(field))
+        title = mark_safe(title)
         messages.append({
-            'title': 'Please correct: "{0}"'.format(pretty_name(field)),
-            'contents': error.as_text(),
+            'title': title,
+            'contents': error.as_text().lstrip("* ").lower(),
             'type': 'warning'
         })
     return messages

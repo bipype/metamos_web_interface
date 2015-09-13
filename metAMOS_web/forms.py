@@ -113,7 +113,7 @@ class MetatranscriptomicsForm(forms.Form):
     set_common_options(table, 'id_selected_files')
 
     reference_condition = field_with_bootstrap_class(CharField)
-    generate_csv = field_with_bootstrap_class(BooleanField)
+    generate_csv = field_with_bootstrap_class(BooleanField, required=False)
 
     selected_files = BootstrapTableMultipleChoiceField(
         choices=enumerate(sample_list),
