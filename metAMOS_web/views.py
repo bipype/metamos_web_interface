@@ -1,56 +1,91 @@
-import os
 import sys
 from django.http import HttpResponse, HttpResponseRedirect
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
 
-import daemon
+import job_manager
 import forms
 import helpers
 
 
-# main page
 def index(request):
     return render(request, 'index.html')
 
 
-# amplicon results
-def new(request, messages=[]):
-    form = forms.SelectSampleForm()
-    data = {'messages': messages,
-            'form': form}
-    return render(request, 'new_job.html', data)
+def new(request):
+
+    form = forms.SelectSampleForm(request.POST or None)
+
+    if form.is_valid():
+
+        from models import SampleResults
+
+        data = {'type': form.cleaned_data['type_of_analysis'],
+                'path': form.cleaned_data['selected_sample']}
+
+        try:
+            results_object = SampleResults.objects.get(**data)
+        except ObjectDoesNotExist:
+            results_object = SampleResults.objects.create(**data)
+
+        return result_redirect(request, results_object)
+
+    else:
+
+        messages = helpers.errors_to_messages(form.errors)
+
+        data = {'messages': messages,
+                'form': form}
+
+        return render(request, 'new_job.html', data)
 
 
-# view for testing
-def test(request):
-    form = forms.MetatranscriptomicsForm()
-    return render(request, 'testing_template.html', {'form': form})
+def new_meta(request):
+
+    form = forms.MetatranscriptomicsForm(dict(request.POST) or None)
+
+    if form.is_valid():
+
+        from paths import PATH_METATR_OUT_DIR
+        from models import MetaResults
+
+        data = {'type': 'metatranscriptomics',
+                'files': form.cleaned_data['selected_files'],
+                'generate_csv': form.cleaned_data['generate_csv'],
+                'reference_condition': form.cleaned_data['reference_condition']}
+
+        try:
+            results_object = MetaResults.objects.get(**data)
+
+        except ObjectDoesNotExist:
+            # let's create unique but not so long name dir for our output
+            data['path'] = helpers.make_unique_dir(PATH_METATR_OUT_DIR)
+            results_object = MetaResults.objects.create(**data)
+
+        return result_redirect(request, results_object)
+
+    else:
+
+        messages = helpers.errors_to_messages(form.errors)
+
+        data = {'messages': messages,
+                'form': form}
+
+        return render(request, 'metatranscriptomics.html', data)
 
 
 def remove(request):
-    form = forms.RemoveSampleForm()
 
     messages = []
 
-    if request.method == "POST":
-        # take care of response
+    form = forms.RemoveSampleForm(dict(request.POST) or None)
 
-        # Since construction of our widgets is slightly different, than
-        # construction of default ones** and validators are hardcoded for
-        # default widgets without other way to replace them than by subclassing
-        # *ChoiceField classes which would be redundant and ugly, validation
-        # is performed here without use of form.is_valid() function.
+    if form.is_valid():
 
-        # ** in BootstrapTableWidgets there are multiple columns allowed (so,
-        # items in .choices could be of any length) but the default widget
-        # (Select) always uses items with at most 2 elements in .choices
-        # and if there are 2 - they are treated as a group of options.
-
-        choices = form.fields['samples_to_remove'].widget.get_valid_choices()
-        selected = dict(request.POST).get('samples_to_remove', [])
+        selected = form.cleaned_data['samples_to_remove']
 
         if not selected:
             messages.append({
@@ -60,28 +95,31 @@ def remove(request):
 
         for sample_name in selected:
 
-            if sample_name in choices:
+            results_data = {'path': sample_name}
+            success = helpers.remove_results_by_data(**results_data)
 
-                # TODO: removing results by 'sample_name'
-                # (following line is only a placeholder)
-                success = True
-
-                if success:
-                    messages.append({
-                        'title': 'Success!',
-                        'contents': '{0} removed'.format(sample_name),
-                        'type': 'success'
-                    })
-                else:
-                    messages.append({
-                        'contents': 'Unable to remove: {0}'.format(sample_name),
-                        'type': 'danger'
-                    })
+            if success:
+                messages.append({
+                    'title': 'Success!',
+                    'contents': 'Results associated with {0} '
+                                'have been removed'.format(sample_name),
+                    'type': 'success'
+                })
+            elif success is None:
+                messages.append({
+                    'title': 'Nothing to do!',
+                    'contents': 'There are no results associated with '
+                                '{0} in database'.format(sample_name),
+                    'type': 'info'
+                })
             else:
                 messages.append({
-                    'contents': "Sample {0} doesn't exists".format(sample_name),
-                    'type': 'warning'
+                    'contents': 'Unable to remove results!'
+                                'associated with: {0}'.format(sample_name),
+                    'type': 'danger'
                 })
+    else:
+        messages += helpers.errors_to_messages(form.errors)
 
     data = {'messages': messages,
             'form': form}
@@ -89,48 +127,86 @@ def remove(request):
     return render(request, 'remove.html', data)
 
 
-def result_redirect(request):
-    # if sample wasn't selected, show the form again, with warning this time
-    if 'selected_sample' not in request.GET:
-        warning = {
-            'contents': 'Your have to select a sample',
-            'type': 'info'
-        }
-        return new(request, messages=[warning])
-    sample_source, sample_id = request.GET['selected_sample'].split('/')
-    bipype_variant = 'bipype_' + request.GET['selected_bipype_variant'] + '_' + sample_source.lower()
-    return HttpResponseRedirect('/biogaz/result/' + sample_id + '/' + bipype_variant)
+def result_redirect(request, results_object):
+
+    destination = '/biogaz/result/{path}/{type}'.format(
+        path=helpers.encode_path(results_object.path),
+        type=results_object.type)
+
+    return HttpResponseRedirect(destination)
 
 
-def get_status(request, sample_id, type_of_analysis):
+def get_status(request, path, type_of_analysis):
     import json
-    progress = helpers.get_progress(sample=sample_id, variant=type_of_analysis)
-    to_json = {'status': progress}
+    path = helpers.decode_path(path)
+    results_object = helpers.get_results_object(type=type_of_analysis, path=path)
+    to_json = {'progress': job_manager.get_progress(results_object.job),
+               'state': job_manager.get_job_state(results_object.job),
+               'error': results_object.job.error}
     return HttpResponse(json.dumps(to_json), mimetype='application/json')
 
 
-def result(request, sample_id, type_of_analysis):
+def show_html(file_path):
+    # TODO: jesli czas pozwoli: zamiast wyswietlac html mozna zrobic szablon
+    # ktory bedzie wyswietlaj je w ramce iframe, przez co bbedzie to fajniej
+    # wygladac
+    with open(file_path) as f:
+        html_source = f.read()
+    return HttpResponse(html_source, content_type='text/html')
 
-    progress = helpers.get_progress(sample=sample_id, variant=type_of_analysis)
 
-    data = {'sample_id': sample_id,
-            'type_of_analysis': type_of_analysis,
-            'progress': progress}
+def wait(request, data):
+    return render(request, 'wait.html', data)
 
-    output_dir = helpers.get_output_dir(sample_id, type_of_analysis)
-    krona_xml_path, krona_html_path = helpers.get_krona_paths(output_dir)
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        daemon.check_and_add_sample(sample_id, type_of_analysis)
-        return render(request, 'wait.html', data)
-    else:
-        if not os.path.exists(krona_xml_path):
-            daemon.check_and_add_sample(sample_id, type_of_analysis)
-            return render(request, 'wait.html', data)
+def result(request, path, type_of_analysis):
+
+    path = helpers.decode_path(path)
+
+    try:
+        results_object = helpers.get_results_object(type=type_of_analysis,
+                                                    path=path)
+    except ObjectDoesNotExist:
+        # this case is possible if someone has deleted results related to given
+        # sample, whereas another one tried then to refresh this view.
+        # for this case, redirect to home
+        return HttpResponseRedirect('/biogaz/')
+
+    state = job_manager.get_job_state(results_object.job)
+
+    if state == 'done':
+
+        if results_object.type == 'metatranscriptomics':
+            import os
+            path = os.path.join(results_object.path, 'index.html')
+
+            return show_html(path)
         else:
-            if not os.path.exists(krona_html_path):
-                helpers.create_krona_html(krona_xml_path, krona_html_path)
-            with open(krona_html_path) as f:
-                html_source = f.read()
-        return HttpResponse(html_source, content_type='text/html')
+            output_dir = helpers.get_output_dir(path, type_of_analysis)
+            krona_html_path = helpers.get_krona_paths(output_dir)[1]
+
+            return show_html(krona_html_path)
+
+    else:
+
+        if state == 'not in database':
+
+            results_object.job = job_manager.create_job()
+            results_object.save()
+            state = 'queued'
+
+        elif state == 'failed':
+
+            job_manager.remove_job(results_object.job)
+            results_object.job = job_manager.create_job()
+            results_object.save()
+            state = 'requeued'
+
+        progress = job_manager.get_progress(results_object.job)
+
+        data = {'path': helpers.encode_path(path),
+                'type_of_analysis': type_of_analysis,
+                'progress': progress,
+                'state': state}
+
+        return wait(request, data)

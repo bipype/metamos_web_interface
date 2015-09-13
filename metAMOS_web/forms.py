@@ -1,10 +1,11 @@
 from django.forms import forms
-from django.forms.fields import ChoiceField
 from django.forms.fields import CharField
 from django.forms.fields import BooleanField
-from django.forms.fields import MultipleChoiceField
+from django.forms.fields import ChoiceField
 from bootstrap_tables.widgets import BootstrapTableSelect
 from bootstrap_tables.widgets import BootstrapTableSelectMultiple
+from bootstrap_tables.fields import BootstrapTableChoiceField
+from bootstrap_tables.fields import BootstrapTableMultipleChoiceField
 
 import sys
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
@@ -91,10 +92,9 @@ class SelectSampleForm(forms.Form):
         A belongs to bipype_variant_list,
         B belongs to sample_list
     """
-    selected_bipype_variant = field_with_bootstrap_class(
+    type_of_analysis = field_with_bootstrap_class(
         ChoiceField,
-        choices=zip(bipype_variant_list, bipype_variant_list),
-        label='Type of analysis')
+        choices=zip(bipype_variant_list, bipype_variant_list))
 
     table = BootstrapTableSelect('sample')
     set_common_options(table, 'id_selected_sample')
@@ -102,7 +102,9 @@ class SelectSampleForm(forms.Form):
     # Use BootstrapTableSelect widget here, instead of default Select widget.
     # Note, that fields created with widgets from bootstrap_tables package
     # doesn't need to be wrapped with field_with_bootstrap_class() function.
-    selected_sample = ChoiceField(choices=enumerate(sample_list), widget=table)
+    selected_sample = BootstrapTableChoiceField(
+        choices=enumerate(sample_list),
+        widget=table)
 
 
 class MetatranscriptomicsForm(forms.Form):
@@ -110,11 +112,12 @@ class MetatranscriptomicsForm(forms.Form):
     table = BootstrapTableSelectMultiple('sample')
     set_common_options(table, 'id_selected_files')
 
-    generate_csv = field_with_bootstrap_class(BooleanField)
     reference_condition = field_with_bootstrap_class(CharField)
+    generate_csv = field_with_bootstrap_class(BooleanField)
 
-    # Use BootstrapTableSelect widget here, instead of default Select widget
-    selected_files = ChoiceField(choices=enumerate(sample_list), widget=table)
+    selected_files = BootstrapTableMultipleChoiceField(
+        choices=enumerate(sample_list),
+        widget=table)
 
 
 class RemoveSampleForm(forms.Form):
@@ -122,7 +125,7 @@ class RemoveSampleForm(forms.Form):
     table = BootstrapTableSelectMultiple('sample')
     set_common_options(table, 'id_samples_to_remove')
 
-    # Use BootstrapTableSelect widget here, instead of default Select widget
-    samples_to_remove = MultipleChoiceField(choices=enumerate(sample_list),
-                                            widget=table)
+    samples_to_remove = BootstrapTableMultipleChoiceField(
+        choices=enumerate(sample_list),
+        widget=table)
 

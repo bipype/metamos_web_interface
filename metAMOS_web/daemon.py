@@ -3,6 +3,10 @@ import os
 import sys
 import subprocess
 from time import sleep
+
+from paths import PATH_METAMOS_DIR
+
+
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
@@ -10,8 +14,11 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'metAMOS_web_interface.settings'
 from django.core.management import setup_environ
 import metAMOS_web_interface.settings as settings
 setup_environ(settings)
-from metAMOS_web.models import SampleResults
 import helpers
+import shutil
+import glob
+
+from job_manager import JobManager
 
 SUBPROCESS_ENV = os.environ.copy()
 SUBPROCESS_ENV['SHELL'] = '/bin/bash'
@@ -22,16 +29,25 @@ def get_any_fasta(directory):
     return [i for i in os.listdir(directory) if i.endswith('fasta')][0]
 
 
-def run_metamos(sample_id, type_of_analysis):
+def update_progress(job, value):
+    print "Progress: " + str(value)
+    job.progress = value
+    job.save()
 
-    sample_dir = helpers.get_sample_dir(sample_id, type_of_analysis)
-    output_dir = helpers.get_output_dir(sample_id, type_of_analysis)
+
+def run_metamos(job, results_object):
+
+    sample_path = results_object.path
+    type_of_analysis = results_object.type
+
+    sample_dir = helpers.get_sample_dir(sample_path)
+    output_dir = helpers.get_output_dir(sample_path, type_of_analysis)
     krona_xml_path, krona_html_path = helpers.get_krona_paths(output_dir)
 
-    sample = SampleResults.objects.get(sample=sample_id, variant=type_of_analysis)
-    sample.job_started = True
-    sample.progress = 1
-    sample.save()
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    update_progress(job, 5)
 
     run_dir = os.path.join(sample_dir, 'rundirs')
 
@@ -44,21 +60,22 @@ def run_metamos(sample_id, type_of_analysis):
     err_log = open('/tmp/bipype.err', 'w')
 
     init_ps = subprocess.Popen(' '.join(
-        ['/home/pszczesny/soft/metAMOS-1.5rc3/initPipeline',
+        [os.path.join(PATH_METAMOS_DIR, 'initPipeline'),
          '-1',
-         os.path.join(sample_dir, get_any_fasta(sample_dir)),   # TODO: ???????
+         os.path.join(sample_dir, get_any_fasta(sample_dir)),
          '-d',
          work_dir]
     ), env=SUBPROCESS_ENV, shell=True, stdout=out_log, stderr=err_log)
     init_ps.wait()
 
-    sample.progress = 50
-    sample.save()
+    update_progress(job, 30)
+
+    skip = 'FindORFS,MapReads,Validate,Abundance,Annotate,Scaffold,Propagate,Classify'
 
     ps_run = subprocess.Popen(' '.join(
-        ['/home/pszczesny/soft/metAMOS-1.5rc3/runPipeline',
+        [os.path.join(PATH_METAMOS_DIR, 'runPipeline'),
          '-n',
-         'FindORFS,MapReads,Validate,Abundance,Annotate,Scaffold,Propagate,Classify',
+         skip,
          '-a',
          type_of_analysis,
          '-d',
@@ -69,30 +86,76 @@ def run_metamos(sample_id, type_of_analysis):
     out_log.close()
     err_log.close()
 
-    os.system('cp -a ' + work_dir + '/Assemble/out/out2/*.krona ' + krona_xml_path)
-    sample.job_completed = True
-    sample.progress = 100
-    sample.save()
+    update_progress(job, 90)
+
+    krona_files = glob.glob(work_dir + '/Assemble/out/out2/*.krona')
+    # there should be exactly one *.krona file in /Assemble/out/out2/
+    assert len(krona_files) != 1
+
+    shutil.copyfile(krona_files[0], krona_xml_path)
+
+    update_progress(job, 95)
+
+    if not os.path.exists(krona_html_path):
+        helpers.create_krona_html(krona_xml_path, krona_html_path)
+
+    update_progress(job, 100)
 
 
-def check_and_add_sample(sample_id, type_of_analysis):
-    if len(SampleResults.objects.filter(sample=sample_id, variant=type_of_analysis)) == 0:
-        sample = SampleResults(sample=sample_id,
-                               variant=type_of_analysis,
-                               job_started=False,
-                               job_completed=False)
-        sample.save()
+def run_metatranscriptomics(job, results_object):
+
+    update_progress(job, 5)
+
+    out_dir_path = results_object.path
+
+    # TODO:
+    """
+    # create tmp file with settings
+
+    config_file_path = os.path.join(out_dir_path, 'config.csv')
+    with open(config_file_path, 'w') as f:
+        f.put csv here
 
 
-def run_queued_sample():
-    try:
-        sample = SampleResults.objects.filter(job_started=False)[0]
-    except IndexError:   # nothing to do
-        return
-    run_metamos(sample_id=sample.sample, type_of_analysis=sample.variant)
+    # feed bipype by subprocess with tmp file
+    commands = [
+        os.path.join(PATH_METAMOS_DIR, 'runPipeline'),
+        '-metatr_config',
+        out_dir_path
+    ]
+
+    command = ' '.join(commands)
+
+    process = subprocess.Popen(
+        command,
+        env=SUBPROCESS_ENV,
+        shell=True,
+        stdout=out_log,
+        stderr=err_log
+    )
+
+    process.wait()
+
+    # seek for information about progress
+
+    # be happy if job finished successfully
+    """
+
+    update_progress(job, 100)
 
 
 if __name__ == '__main__':
+
+    job_manager = JobManager()
+    job_manager.add_callback(run_metatranscriptomics, 'metatranscriptomics')
+    job_manager.add_callback(run_metamos, 'default')
+
     while True:
-        run_queued_sample()
-        sleep(1)
+
+        performed = job_manager.run_queued()
+
+        if performed:
+            sleep(1)
+        else:
+            # let's be more friendly for server if the queue was empty last time
+            sleep(10)
