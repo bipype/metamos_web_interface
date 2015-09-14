@@ -174,16 +174,7 @@ def result(request, path, type_of_analysis):
 
     if state == 'done':
 
-        if results_object.type == 'metatranscriptomics':
-            import os
-            path = os.path.join(results_object.path, 'index.html')
-
-            return show_html(path)
-        else:
-            output_dir = helpers.get_output_dir(path, type_of_analysis)
-            krona_html_path = helpers.get_krona_paths(output_dir)[1]
-
-            return show_html(krona_html_path)
+        return show_html(results_object.html_path)
 
     else:
 

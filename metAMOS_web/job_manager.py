@@ -98,7 +98,7 @@ class JobManager(object):
             job.started = True
             job.save()
 
-            results = job.results
+            results = job.results.cast()
 
             if results.type in self.callbacks:
                 callback = self.callbacks[results.type]

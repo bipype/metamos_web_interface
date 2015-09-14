@@ -3,13 +3,14 @@ import os
 import sys
 import subprocess
 from time import sleep
-
 from paths import PATH_METAMOS_DIR
 
+CWD = os.getcwd()
+DIRNAME = os.path.dirname(CWD)
+sys.path.append(DIRNAME)
+sys.path.append(CWD)
+sys.path.append(os.path.join(DIRNAME, 'metAMOS_web_interface'))
 
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'metAMOS_web_interface.settings'
 from django.core.management import setup_environ
 import metAMOS_web_interface.settings as settings
@@ -31,34 +32,23 @@ def update_progress(job, value):
 
 
 def run_metamos(job, results_object):
+    """
+    Args:
+        results_object - an instance of SampleResults object
+    """
+    sample = results_object
 
-    sample_path = results_object.path
-    real_path = helpers.get_real_path(sample_path)
-    type_of_analysis = results_object.type
-
-    print '\n'
-    print "Sample path: " + sample_path
-    print "Real sample path: " + real_path
-    print "Type of analysis:" + type_of_analysis
-
-    sample_dir = helpers.get_sample_dir(real_path)
-    print "Sample dir: " + sample_dir
-    output_dir = helpers.get_output_dir(real_path, type_of_analysis)
-    krona_xml_path, krona_html_path = helpers.get_krona_paths(output_dir)
-    print krona_xml_path, krona_html_path
-
-
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not os.path.exists(sample.out_dir_path):
+        os.makedirs(sample.out_dir_path)
 
     update_progress(job, 5)
 
-    run_dir = os.path.join(sample_dir, 'rundirs')
+    run_dir = os.path.join(sample.dir_path, 'rundirs')
 
     if not os.path.exists(run_dir):
         os.mkdir(run_dir)
 
-    work_dir = os.path.join(run_dir, type_of_analysis)
+    work_dir = os.path.join(run_dir, sample.type)
 
     out_log = open('/tmp/bipype.out', 'w')
     err_log = open('/tmp/bipype.err', 'w')
@@ -66,7 +56,7 @@ def run_metamos(job, results_object):
     command = ' '.join(
         [os.path.join(PATH_METAMOS_DIR, 'initPipeline'),
          '-1',
-         real_path,
+         sample.real_path,
          '-d',
          work_dir]
     )
@@ -84,7 +74,7 @@ def run_metamos(job, results_object):
          skip,
          # hack
          '-a',
-         'bipype_' + type_of_analysis,
+         'bipype_' + sample.type,
          '-d',
          work_dir]
     )
@@ -97,18 +87,10 @@ def run_metamos(job, results_object):
 
     update_progress(job, 90)
 
-    krona_files = glob.glob(work_dir + '/Assemble/out/out2/*.krona')
-    # there should be exactly one *.krona file in /Assemble/out/out2/
-    assert len(krona_files) == 1
+    krona_html = os.path.join(work_dir, 'Assemble/out/out2/krona.html')
 
-    # TODO: use html
-    shutil.copyfile(krona_files[0], krona_xml_path)
-
-    update_progress(job, 95)
-
-    # TODO: remove
-    if not os.path.exists(krona_html_path):
-        helpers.create_krona_html(krona_xml_path, krona_html_path)
+    assert os.path.isfile(krona_html)
+    shutil.copyfile(krona_html, sample.html_path)
 
     update_progress(job, 100)
 
@@ -137,7 +119,7 @@ def run_metatranscriptomics(job, results_object):
             # TODO: add conditions (how?)
             condition =
             # TODO: add R1 R2
-            path = get_real_path(the_file)
+            path = the_file
             f.write(path)
 
 

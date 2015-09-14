@@ -10,5 +10,4 @@ KRONA_PATH = '/media/storage/pszczesny/soft/metAMOS-1.5rc3/KronaTools/'
 WORKFLOWS_PATH = '/media/storage/pszczesny/soft/metAMOS-1.5rc3/Utilities/config'
 TMP_PATH = '/tmp'
 PATH_METAMOS_DIR = '/home/pszczesny/soft/metAMOS-1.5rc3/'
-# TODO: ustalic ta sciezke
 PATH_METATR_OUT_DIR = '/home/pszczesny/storage/metatranscriptomics'

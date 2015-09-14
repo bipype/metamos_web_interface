@@ -23,21 +23,6 @@ def errors_to_messages(errors):
     return messages
 
 
-def get_real_path(path):
-    # Only to use with sample results
-    from string import Template
-    return Template('$' + path).substitute(SAMPLE_PATH)
-
-
-def get_sample_dir(path):
-    return path + '.d'
-
-
-def get_output_dir(path, type_of_analysis):
-    sample_dir = get_sample_dir(path)
-    return os.path.join(sample_dir, 'bipype_output', type_of_analysis)
-
-
 def remove_results_by_data(**data):
     results_objects = Results.objects.filter(**data)
 
@@ -45,33 +30,32 @@ def remove_results_by_data(**data):
         return None
 
     try:
-
         for results_object in results_objects:
 
+            casted_object = results_object.cast()
+
             # 1. remove job
-            job_manager.remove_job(results_object.job)
+            job_manager.remove_job(casted_object.job)
 
             # 2. determine output dir and remove it (type-specific)
-            if results_object.type == 'metatranscriptomics':
-                output_dir = results_object.path
+            if casted_object.type == 'metatranscriptomics':
+                results_dir = casted_object.dir_path
             else:
-                output_dir = get_output_dir(get_real_path(results_object.path),
-                                            results_object.type)
-            # TODO
-            print "Removing " + output_dir
-            # rm -r output_dir
-            shutil.rmtree(output_dir)
+                results_dir = casted_object.dir_path
 
-            # 3. remove result
+            print "Removing " + results_dir
+            shutil.rmtree(results_dir, ignore_errors=True)
+
+            # 3. remove result - it's strange but django requires here
+            # uncasted instance of an object
             results_object.delete()
         return True
-
     except:                                          # TODO: specific exceptions
         return False
 
-
 def get_results_object(**results_data):
-    return Results.objects.get(**results_data)
+    results_object = Results.objects.get(**results_data)
+    return results_object.cast()
 
 
 def make_unique_dir(parent_dir):
@@ -93,18 +77,6 @@ def decode_path(path):
     return urllib.unquote(path)
 
 
-def create_krona_html(input_xml_path, output_html_path):
-    os.system(
-            'PERL5LIB=/home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona /home/pszczesny/soft/metAMOS-1.5rc3/Utilities/krona/ImportXML.pl'
-            + input_xml_path + ' -o ' + output_html_path
-            )
-
-
-def get_krona_paths(output_dir):
-    krona_xml_path = os.path.join(output_dir, 'krona.xml')
-    krona_html_path = os.path.join(output_dir, 'krona.html')
-    return krona_xml_path, krona_html_path
-
 
 def get_bipype_variant_list():
     return [i for i in os.listdir(WORKFLOWS_PATH) if i.startswith('bipype_')]
@@ -114,7 +86,7 @@ def get_pretty_sample_list():
     samples = []
     for alias, real_path in SAMPLE_PATH.items():
         for a_file in os.listdir(real_path):
-            if not a_file.endswith('.d'):
+            if not (a_file.endswith('.d') or a_file.endswith('.py')):
                 samples.append(alias + '/' + a_file)
     return samples
 
