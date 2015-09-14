@@ -50,8 +50,8 @@
         if(state == "failed")
         {
           $("#state").addClass("alert-danger")
-          $("#state").html("Unfortunately, this job failed. To launch it again, " +
-          "<a href='javascript:window.location.href=window.location.href'>refresh</a> this page.")
+          $("#state").html("Unfortunately, this job failed. If it is the first time, you can try to " +
+          "<a href='/biogaz/new'>launch it again</a>.")
           $("#state").show()
           if (data.error)
           {
