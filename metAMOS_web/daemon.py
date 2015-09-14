@@ -108,23 +108,41 @@ def run_metatranscriptomics(job, results_object):
 
     out_dir_path = results_object.path
 
+    # create output_type argument
+    output_type = ['new']
+    if results_object.generate_csv:
+        output_type.append('csv')
+
     # TODO:
     """
-    # create tmp file with settings
+    # TODO: PATH_BIPYPE
 
-    config_file_path = os.path.join(out_dir_path, 'config.csv')
+    # create tmp file with settings
+    config_file_path = os.path.join(out_dir_path, 'meta.config')
+
     with open(config_file_path, 'w') as f:
-        f.put csv here
+        f.write(results_object.reference_condition + '\n')
+        for the_file in results_object.files:
+            # TODO: add conditions (how?)
+            condition =
+            # TODO: add R1 R2
+            path = get_real_path(the_file)
+            f.write(path)
 
 
     # feed bipype by subprocess with tmp file
     commands = [
-        os.path.join(PATH_METAMOS_DIR, 'runPipeline'),
+        os.path.join(PATH_BIPYPE),
         '-metatr_config',
-        out_dir_path
+        config_file_path,
+        '-metatr_output_type',
+        output_type
     ]
 
     command = ' '.join(commands)
+
+    out_log = open('/tmp/bipype.out', 'w')
+    err_log = open('/tmp/bipype.err', 'w')
 
     process = subprocess.Popen(
         command,

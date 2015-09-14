@@ -22,9 +22,13 @@ def errors_to_messages(errors):
     return messages
 
 
-def get_sample_dir(path):
+def get_real_path(path):
     from string import Template
-    return Template('$' + path + '.d').substitute(SAMPLE_PATH)
+    return Template('$' + path).substitute(SAMPLE_PATH)
+
+
+def get_sample_dir(path):
+    get_real_path(path) + '.d'
 
 
 def get_output_dir(path, type_of_analysis):
