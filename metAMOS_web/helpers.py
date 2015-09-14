@@ -7,6 +7,7 @@ from metAMOS_web.models import Results
 from django.forms.forms import pretty_name
 from django.utils.safestring import mark_safe
 import job_manager
+import shutil
 
 
 def errors_to_messages(errors):
@@ -23,12 +24,13 @@ def errors_to_messages(errors):
 
 
 def get_real_path(path):
+    # Only to use with sample results
     from string import Template
     return Template('$' + path).substitute(SAMPLE_PATH)
 
 
 def get_sample_dir(path):
-    get_real_path(path) + '.d'
+    return path + '.d'
 
 
 def get_output_dir(path, type_of_analysis):
@@ -53,11 +55,12 @@ def remove_results_by_data(**data):
             if results_object.type == 'metatranscriptomics':
                 output_dir = results_object.path
             else:
-                output_dir = get_output_dir(results_object.path,
+                output_dir = get_output_dir(get_real_path(results_object.path),
                                             results_object.type)
             # TODO
             print "Removing " + output_dir
             # rm -r output_dir
+            shutil.rmtree(output_dir)
 
             # 3. remove result
             results_object.delete()

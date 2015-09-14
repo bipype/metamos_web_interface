@@ -24,11 +24,6 @@ SUBPROCESS_ENV = os.environ.copy()
 SUBPROCESS_ENV['SHELL'] = '/bin/bash'
 
 
-def get_any_fasta(directory):
-    # TODO: this is wrong, or we need to rename all files to *.fasta
-    return [i for i in os.listdir(directory) if i.endswith('fasta')][0]
-
-
 def update_progress(job, value):
     print "Progress: " + str(value)
     job.progress = value
@@ -38,11 +33,20 @@ def update_progress(job, value):
 def run_metamos(job, results_object):
 
     sample_path = results_object.path
+    real_path = helpers.get_real_path(sample_path)
     type_of_analysis = results_object.type
 
-    sample_dir = helpers.get_sample_dir(sample_path)
-    output_dir = helpers.get_output_dir(sample_path, type_of_analysis)
+    print '\n'
+    print "Sample path: " + sample_path
+    print "Real sample path: " + real_path
+    print "Type of analysis:" + type_of_analysis
+
+    sample_dir = helpers.get_sample_dir(real_path)
+    print "Sample dir: " + sample_dir
+    output_dir = helpers.get_output_dir(real_path, type_of_analysis)
     krona_xml_path, krona_html_path = helpers.get_krona_paths(output_dir)
+    print krona_xml_path, krona_html_path
+
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -59,28 +63,33 @@ def run_metamos(job, results_object):
     out_log = open('/tmp/bipype.out', 'w')
     err_log = open('/tmp/bipype.err', 'w')
 
-    init_ps = subprocess.Popen(' '.join(
+    command = ' '.join(
         [os.path.join(PATH_METAMOS_DIR, 'initPipeline'),
          '-1',
-         os.path.join(sample_dir, get_any_fasta(sample_dir)),
+         real_path,
          '-d',
          work_dir]
-    ), env=SUBPROCESS_ENV, shell=True, stdout=out_log, stderr=err_log)
+    )
+    print command
+    init_ps = subprocess.Popen(command, env=SUBPROCESS_ENV, shell=True, stdout=out_log, stderr=err_log)
     init_ps.wait()
 
     update_progress(job, 30)
 
     skip = 'FindORFS,MapReads,Validate,Abundance,Annotate,Scaffold,Propagate,Classify'
 
-    ps_run = subprocess.Popen(' '.join(
+    command = ' '.join(
         [os.path.join(PATH_METAMOS_DIR, 'runPipeline'),
          '-n',
          skip,
+         # hack
          '-a',
-         type_of_analysis,
+         'bipype_' + type_of_analysis,
          '-d',
          work_dir]
-    ), env=SUBPROCESS_ENV, shell=True, stdout=out_log, stderr=err_log)
+    )
+    print command
+    ps_run = subprocess.Popen(command, env=SUBPROCESS_ENV, shell=True, stdout=out_log, stderr=err_log)
     ps_run.wait()
 
     out_log.close()
@@ -90,12 +99,14 @@ def run_metamos(job, results_object):
 
     krona_files = glob.glob(work_dir + '/Assemble/out/out2/*.krona')
     # there should be exactly one *.krona file in /Assemble/out/out2/
-    assert len(krona_files) != 1
+    assert len(krona_files) == 1
 
+    # TODO: use html
     shutil.copyfile(krona_files[0], krona_xml_path)
 
     update_progress(job, 95)
 
+    # TODO: remove
     if not os.path.exists(krona_html_path):
         helpers.create_krona_html(krona_xml_path, krona_html_path)
 
