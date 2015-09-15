@@ -1,6 +1,5 @@
 from django.forms import forms
 from django.forms.fields import CharField
-from django.forms.fields import BooleanField
 from django.forms.fields import ChoiceField
 from bootstrap_tables.widgets import BootstrapTableSelect
 from bootstrap_tables.widgets import BootstrapTableSelectMultiple
@@ -78,8 +77,9 @@ def set_common_options(table, field_id):
 
     # To have both header and contents horizontally centered so (h)align.
     table.columns.add(field='nr', title='#', align='center',
-                      sortable=True, halign='center')
-    table.columns.add(field='sample', title='Name', sortable=True)
+                      sortable=True, halign='center', valign='middle')
+    table.columns.add(field='sample', title='Name', sortable=True,
+                      valign='middle')
 
 
 class SelectSampleForm(forms.Form):
@@ -111,12 +111,21 @@ class MetatranscriptomicsForm(forms.Form):
 
     table = BootstrapTableSelectMultiple('sample')
     set_common_options(table, 'id_selected_files')
+    table.columns.add(field='condition', title='Condition')
 
     reference_condition = field_with_bootstrap_class(CharField)
-    generate_csv = field_with_bootstrap_class(BooleanField, required=False)
+
+    input_template = '<input type="text" class="form-control input-sm" ' \
+                     'name="conditions[{0}]" onclick="stopPropagation(event)">'
+
+    rows = []
+    for i, sample in enumerate(sample_list):
+        condition_input = input_template.format(sample)
+        row = [i, sample, condition_input]
+        rows.append(row)
 
     selected_files = BootstrapTableMultipleChoiceField(
-        choices=enumerate(sample_list),
+        choices=rows,
         widget=table)
 
 

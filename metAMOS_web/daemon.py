@@ -3,7 +3,7 @@ import os
 import sys
 import subprocess
 from time import sleep
-from paths import PATH_METAMOS_DIR
+import paths
 
 CWD = os.getcwd()
 DIRNAME = os.path.dirname(CWD)
@@ -53,7 +53,7 @@ def run_metamos(job, results_object):
     err_log = open('/tmp/bipype.err', 'w')
 
     command = ' '.join(
-        [os.path.join(PATH_METAMOS_DIR, 'initPipeline'),
+        [os.path.join(paths.PATH_METAMOS_DIR, 'initPipeline'),
          '-1',
          sample.real_path,
          '-d',
@@ -68,7 +68,7 @@ def run_metamos(job, results_object):
     skip = 'FindORFS,MapReads,Validate,Abundance,Annotate,Scaffold,Propagate,Classify'
 
     command = ' '.join(
-        [os.path.join(PATH_METAMOS_DIR, 'runPipeline'),
+        [os.path.join(paths.PATH_METAMOS_DIR, 'runPipeline'),
          '-n',
          skip,
          # hack
@@ -101,35 +101,60 @@ def run_metatranscriptomics(job, results_object):
 
     update_progress(job, 5)
 
-    out_dir_path = results_object.path
-
     # create output_type argument
-    output_type = ['new']
+    output_type = ['both']
 
     # TODO:
-    """
-    # TODO: PATH_BIPYPE
 
     # create tmp file with settings
-    config_file_path = os.path.join(out_dir_path, 'meta.config')
+    config_file_path = os.path.join(results_object.real_path, 'meta.config')
 
     with open(config_file_path, 'w') as f:
         f.write(results_object.reference_condition + '\n')
-        for the_file in results_object.files:
-            # TODO: add conditions (how?)
-            condition =
-            # TODO: add R1 R2
-            path = the_file
-            f.write(path)
 
+        import re
+
+        without_r = re.compile('_R\d_')
+
+        base = (without_r.sub('', x) for x in results_object.files)
+        R1 = filter(lambda x: re.match('_R1_', x), results_object.files)
+        R2 = filter(lambda x: re.match('_R2_', x), results_object.files)
+
+        print base
+        print R1
+        print R2
+
+        cond_counter = {}
+
+        for base_name in base:
+            r1_file = filter(lambda x: without_r.sub('', x) == base_name, R1)[0]
+            r2_file = filter(lambda x: without_r.sub('', x) == base_name, R2)[0]
+
+            try:
+                condition = results_object.conditions[r1_file]
+            except KeyError:
+                condition = results_object.conditions[r2_file]
+
+            cond_counter[condition] = cond_counter.get(condition, -1) + 1
+            line_id = condition + '_' + cond_counter[condition]
+
+            line = line_id + '\t' + ' '.join([r1_file, r2_file, condition])
+
+            f.write(line)
+
+    # for debug only:
+    with open(config_file_path, 'r') as f:
+        print f.read()
 
     # feed bipype by subprocess with tmp file
     commands = [
-        os.path.join(PATH_BIPYPE),
-        '-metatr_config',
+        paths.PATH_BIPYPE,
+        '--metatr_config',
         config_file_path,
-        '-metatr_output_type',
-        output_type
+        '--metatr_output_type',
+        output_type,
+        '--out_dir',
+        results_object.real_path
     ]
 
     command = ' '.join(commands)
@@ -147,10 +172,9 @@ def run_metatranscriptomics(job, results_object):
 
     process.wait()
 
+    # TODO:
     # seek for information about progress
-
     # be happy if job finished successfully
-    """
 
     update_progress(job, 100)
 

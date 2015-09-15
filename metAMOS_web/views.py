@@ -52,9 +52,15 @@ def new_meta(request):
         from paths import PATH_METATR_OUT_DIR
         from models import MetaResults
 
+        raw_data = dict(request.POST)
+        conditions = {}
+
+        for meta_file in form.cleaned_data['selected_files']:
+            conditions[meta_file] = raw_data['conditions[%s]' % meta_file]
+
         data = {'type': 'metatranscriptomics',
                 'files': form.cleaned_data['selected_files'],
-                'generate_csv': form.cleaned_data['generate_csv'],
+                'conditions': conditions,
                 'reference_condition': form.cleaned_data['reference_condition']}
 
         try:
