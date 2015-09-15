@@ -10,6 +10,15 @@ import job_manager
 import shutil
 
 
+def real_path(path):
+    """
+    Returns real location of the object on the server; by default
+    server-specific part of path is hidden away from end-user.
+    """
+    from string import Template
+    return Template('$' + path).substitute(SAMPLE_PATH)
+
+
 def errors_to_messages(errors):
     messages = []
     for field, error in errors.iteritems():
@@ -84,7 +93,7 @@ def get_pretty_sample_list():
     samples = []
     for alias, real_path in SAMPLE_PATH.items():
         for a_file in os.listdir(real_path):
-            if not (a_file.endswith('.d') or a_file.endswith('.py')):
+            if not (a_file.endswith('.d') or a_file.endswith('.py')) and a_file.find('fast') != -1:
                 samples.append(alias + '/' + a_file)
     return samples
 

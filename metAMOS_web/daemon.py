@@ -17,7 +17,7 @@ import metAMOS_web_interface.settings as settings
 setup_environ(settings)
 import shutil
 import glob
-
+from helpers import real_path
 from job_manager import JobManager
 
 SUBPROCESS_ENV = os.environ.copy()
@@ -99,32 +99,29 @@ def run_metamos(job, results_object):
 
 def run_metatranscriptomics(job, results_object):
 
-    update_progress(job, 5)
+    update_progress(job, 2)
 
-    # create output_type argument
-    output_type = ['both']
-
-    # TODO:
+    output_type = 'both'
 
     # create tmp file with settings
     config_file_path = os.path.join(results_object.real_path, 'meta.config')
 
     with open(config_file_path, 'w') as f:
-        f.write(results_object.reference_condition + '\n')
+        f.write(results_object.reference_condition)
 
         import re
 
         without_r = re.compile('_R\d_')
 
-        base = (without_r.sub('', x) for x in results_object.files)
-        R1 = filter(lambda x: re.match('_R1_', x), results_object.files)
-        R2 = filter(lambda x: re.match('_R2_', x), results_object.files)
+        files = results_object.files
+        base = set(without_r.sub('', x) for x in files)
+        R1 = filter(lambda x: x.find('_R1_') != -1, files)
+        R2 = filter(lambda x: x.find('_R2_') != -1, files)
 
+        print files
         print base
         print R1
         print R2
-
-        cond_counter = {}
 
         for base_name in base:
             r1_file = filter(lambda x: without_r.sub('', x) == base_name, R1)[0]
@@ -135,13 +132,16 @@ def run_metatranscriptomics(job, results_object):
             except KeyError:
                 condition = results_object.conditions[r2_file]
 
-            cond_counter[condition] = cond_counter.get(condition, -1) + 1
-            line_id = condition + '_' + cond_counter[condition]
+            r1_file = real_path(r1_file)
+            r2_file = real_path(r2_file)
+            print r1_file, r2_file, condition
 
-            line = line_id + '\t' + ' '.join([r1_file, r2_file, condition])
+            line = ' '.join([r1_file, r2_file, condition])
 
-            f.write(line)
+            f.write('\n' + line)
 
+    update_progress(job, 4)
+    
     # for debug only:
     with open(config_file_path, 'r') as f:
         print f.read()
@@ -157,10 +157,15 @@ def run_metatranscriptomics(job, results_object):
         results_object.real_path
     ]
 
+    print "COMMNADS:", commands
+
     command = ' '.join(commands)
+    print command
 
     out_log = open('/tmp/bipype.out', 'w')
     err_log = open('/tmp/bipype.err', 'w')
+
+    update_progress(job, 6)
 
     process = subprocess.Popen(
         command,

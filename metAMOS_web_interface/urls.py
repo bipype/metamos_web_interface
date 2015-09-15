@@ -13,4 +13,6 @@ urlpatterns = patterns('',
     url(r'^result/(?P<path>.*)/(?P<type_of_analysis>.*)$', 'metAMOS_web.views.result'),
     url(r'^get_status/(?P<path>.*)/(?P<type_of_analysis>.*)$', 'metAMOS_web.views.get_status'),
     url(r'^remove/$', 'metAMOS_web.views.remove'),
+    url(r'^result_html/(?P<path>.*)/(?P<type_of_analysis>.*)/(?P<file_path>.*)$', 'metAMOS_web.views.result_html'),
+    url(r'^result_download/(?P<path>.*?)/(?P<type_of_analysis>.*?)/(?P<file_path>.*)$', 'metAMOS_web.views.result_download'),
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

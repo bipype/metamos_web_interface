@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Metatranscriptomics results</h1>
+  <div class="list-group">
+    {% for file in files %}
+    <a href="/biogaz/result_{{ file.mode }}/{{ path }}/metatranscriptomics/{{ file.path }}" class="list-group-item">
+        <span class="glyphicon glyphicon-{{ file.icon }}" aria-hidden="true"></span>
+        {{ file.name }}
+    </a>
+    {% endfor %}
+  </div>
+{% endblock %}

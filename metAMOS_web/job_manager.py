@@ -1,4 +1,5 @@
 from metAMOS_web.models import Job
+import traceback
 
 
 def refresh_job_object(job):
@@ -114,9 +115,16 @@ class JobManager(object):
             job.save()
 
         except SystemExit:
+
             job.error = "Daemon execution terminated by system exit"
+
         except Exception as error:
-            job.error = error.message
+
+            feedback = error.message + '\n\n'
+            feedback += traceback.format_exc()
+
+            print feedback
+            job.error = feedback
 
         job.save()
 

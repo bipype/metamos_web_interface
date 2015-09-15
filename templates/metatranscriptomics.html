@@ -24,9 +24,9 @@
 {% block content %}
   {% include "messages.html" with messages=messages %}
   <h1>Metatranscriptomics</h1>
-  {% comment %}
-    <p class="lead">Jakiś jeden akapit o tym, co tu sie dzieje</p>
-  {% endcomment %}
+  <p>Please, select files to be analysed <mark>(both: R1 and R2 required)</mark>,
+  specify conditions per pair (it means, you can skip retyping it for second read)
+  and give the reference condition.</p>
   <form name="metatranscriptomics-form" method="post">
     {% csrf_token %}
     <div class="form-inline">

@@ -98,13 +98,6 @@ class MetaResults(Results):
     conditions = JSONField()
 
     @property
-    def html_path(self):
-        """
-        Returns path to main HTML file with results. 
-        """
-        return os.path.join(self.dir_path, 'index.html')
-
-    @property
     def real_path(self):
         """
         Returns real location of the object on the server; by default
@@ -115,6 +108,7 @@ class MetaResults(Results):
     @property
     def dir_path(self):
         """
-        Returns path to dir where all results should be kept 
+        Returns path to dir where all results should be kept.
         """
         return self.real_path
+

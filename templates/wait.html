@@ -18,14 +18,14 @@
     </div>
   </div>
   <p>
-      <button type="button" class="btn btn-default btn-xs" onclick="$(this).hide();$('#state').show()">
+      <button type="button" class="btn btn-default" onclick="$(this).hide();$('#state').show()">
           Show state
       </button>
   </p>
   <div class="alert alert-info" role="alert" id="state" style="display:none">
       Your job is {{ state }}
   </div>
-  <div id="errors" style="display:none"></div>
+  <pre id="errors" style="display:none"></pre>
   <script type="text/javascript">
     var url = "/biogaz/get_status/{{ path }}/{{ type_of_analysis }}";
 
@@ -55,7 +55,7 @@
           $("#state").show()
           if (data.error)
           {
-           $("#errors").text(data.error)
+          $("#errors").text(data.error)
            $("#errors").show()
           }
         }

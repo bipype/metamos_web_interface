@@ -52,11 +52,11 @@ def new_meta(request):
         from paths import PATH_METATR_OUT_DIR
         from models import MetaResults
 
-        raw_data = dict(request.POST)
+        raw_data = request.POST
         conditions = {}
 
         for meta_file in form.cleaned_data['selected_files']:
-            conditions[meta_file] = raw_data['conditions[%s]' % meta_file]
+            conditions[meta_file] = raw_data.get('conditions[%s]' % meta_file)
 
         data = {'type': 'metatranscriptomics',
                 'files': form.cleaned_data['selected_files'],
@@ -159,6 +159,25 @@ def show_html(file_path):
     return HttpResponse(html_source, content_type='text/html')
 
 
+def result_html(request, path, type_of_analysis, file_path):
+    import os
+    results_object = helpers.get_results_object(type=type_of_analysis, path=path)
+    absolute_path = os.path.join(results_object.real_path, file_path)
+    return show_html(absolute_path)
+
+
+def result_download(request, path, type_of_analysis, file_path):
+    import mimetypes
+    import os
+    results_object = helpers.get_results_object(type=type_of_analysis, path=path)
+    absolute_path = os.path.join(results_object.real_path, file_path)
+    mime = mimetypes.guess_type(absolute_path)
+    fsock = open(absolute_path, 'r')
+    response = HttpResponse(fsock, mimetype=mime)
+
+    return response
+
+
 def wait(request, data):
     return render(request, 'wait.html', data)
 
@@ -180,7 +199,36 @@ def result(request, path, type_of_analysis):
 
     if state == 'done':
 
-        return show_html(results_object.html_path)
+        if results_object.type == 'metatranscriptomics':
+            from django.forms.forms import pretty_name
+            import os
+            file_list = []
+            parent_dir = results_object.dir_path
+            for root, dirs, files in os.walk(parent_dir):
+                
+                for name in files:
+                    if name == 'meta.config':
+                        continue
+                    current_path = os.path.join(root.replace(parent_dir, ''), name)
+                    if current_path.endswith('.html'):
+                        mode = 'html'
+                        icon = 'file'
+                    else:
+                        mode = 'download'
+                        icon = 'download-alt'
+                    current_file = {
+                        'mode': mode,
+                        'path': current_path,
+                        'icon': icon,
+                        'name': pretty_name(os.path.splitext(name)[0])
+                        }
+                    file_list.append(current_file)
+            data = {
+                'path': path,
+                'files': file_list}
+            return render(request, 'results_meta.html', data)
+        else:
+            return show_html(results_object.html_path)
 
     else:
 

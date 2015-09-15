@@ -1,6 +1,7 @@
 # file paths
 SAMPLE_PATH = {
         'TEST': '/home/pszczesny/storage/test_samples',
+        'META_TEST': '/home/pszczesny/storage/test_meta_files',
         #'ITS': '/home/pszczesny/storage/20140519_data/amp/ITS',
         #'16S': '/home/pszczesny/storage/20140519_data/amp/16S',
         }
