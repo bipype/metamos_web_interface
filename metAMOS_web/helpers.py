@@ -24,6 +24,7 @@ def errors_to_messages(errors):
 
 
 def remove_results_by_data(**data):
+    # it is possible to rewrite this function with pre_delete signal in future
     results_objects = Results.objects.filter(**data)
 
     if not results_objects:
@@ -38,10 +39,7 @@ def remove_results_by_data(**data):
             job_manager.remove_job(casted_object.job)
 
             # 2. determine output dir and remove it (type-specific)
-            if casted_object.type == 'metatranscriptomics':
-                results_dir = casted_object.dir_path
-            else:
-                results_dir = casted_object.dir_path
+            results_dir = casted_object.dir_path
 
             print "Removing " + results_dir
             shutil.rmtree(results_dir, ignore_errors=True)
@@ -52,6 +50,7 @@ def remove_results_by_data(**data):
         return True
     except:                                          # TODO: specific exceptions
         return False
+
 
 def get_results_object(**results_data):
     results_object = Results.objects.get(**results_data)
@@ -69,13 +68,12 @@ def encode_path(path):
     within Apache servers; check: http://www.leakon.com/archives/865
     """
     path = urllib.quote(path, safe='')
-    return  urllib.quote(path, safe='')
+    return urllib.quote(path, safe='')
 
 
 def decode_path(path):
     path = urllib.unquote(path)
     return urllib.unquote(path)
-
 
 
 def get_bipype_variant_list():

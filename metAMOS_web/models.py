@@ -1,11 +1,13 @@
-from django.db import models
 import json
+import paths
+import os
+from django.db import models
+
 import sys
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
-import paths
-import os
+
 
 # TODO: move to other file (model_fields.py??), add import
 class JSONField(models.TextField):
@@ -87,34 +89,32 @@ class SampleResults(Results):
         return os.path.join(self.dir_path, 'bipype_output', self.type)
 
 
-
 class MetaResults(Results):
     """
     path - unique path; represents path to dir with results
     """
-    generate_csv = models.BooleanField(default=False)
     reference_condition = models.CharField(max_length=256)
     files = JSONField()
+    conditions = JSONField()
 
     @property
     def html_path(self):
         """
         Returns path to main HTML file with results. 
         """
-        import os
         return os.path.join(self.dir_path, 'index.html')
 
     @property
-    def real_path(path):
+    def real_path(self):
         """
         Returns real location of the object on the server; by default
         server-specific part of path is hidden away from end-user.
         """
-        return os.path.join(paths.PATH_METATR_OUT_DIR, path)
+        return os.path.join(paths.PATH_METATR_OUT_DIR, self.path)
 
     @property
     def dir_path(self):
         """
         Returns path to dir where all results should be kept 
         """
-        return self.path
+        return self.real_path

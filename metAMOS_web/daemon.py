@@ -15,7 +15,6 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'metAMOS_web_interface.settings'
 from django.core.management import setup_environ
 import metAMOS_web_interface.settings as settings
 setup_environ(settings)
-import helpers
 import shutil
 import glob
 
@@ -87,10 +86,13 @@ def run_metamos(job, results_object):
 
     update_progress(job, 90)
 
-    krona_html = os.path.join(work_dir, 'Assemble/out/out2/krona.html')
+    path_name = os.path.join(work_dir, 'Assemble/out/out2/*.html')
+    krona_html = glob.glob(path_name)
 
-    assert os.path.isfile(krona_html)
-    shutil.copyfile(krona_html, sample.html_path)
+    # there should be exactly one krona *.html file in Assemble/out/out2/
+    assert len(krona_html) == 1
+
+    shutil.copyfile(krona_html[0], sample.html_path)
 
     update_progress(job, 100)
 
@@ -103,8 +105,6 @@ def run_metatranscriptomics(job, results_object):
 
     # create output_type argument
     output_type = ['new']
-    if results_object.generate_csv:
-        output_type.append('csv')
 
     # TODO:
     """
