@@ -15,7 +15,7 @@ BootstrapTableChoiceField and BootstrapTableMultipleChoiceField.
 from django.utils.datastructures import MultiValueDict, MergeDict
 from django.forms.widgets import Widget
 from django.utils.safestring import mark_safe
-from bootstrap_tables import BootstrapTable
+from bootstrap_table import BootstrapTable
 
 
 def is_iterable(item):
@@ -115,6 +115,7 @@ class BootstrapTableWidget(BootstrapTable, Widget):
         Renders HTML to be shown inside form when called from *Field class
         """
         self.set(selectItemName=name)
+
         output = self.as_html(additional_attributes=attrs, auto_load=True)
 
         if value:
