@@ -15,3 +15,4 @@ PATH_METATR_OUT_DIR = '/home/pszczesny/storage/metatranscriptomics'
 # TODO: currently we are using newer version of bipype than one used in metamos
 # after migration - replace this path
 PATH_BIPYPE = '/home/pszczesny/tmp/bipype/bipype'
+PATH_METADATA = '/home/pszczesny/soft/metAMOS_web_interface/biogaz_libraries_metadata_sample.xlsx'

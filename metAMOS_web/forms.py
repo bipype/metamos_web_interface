@@ -69,13 +69,12 @@ def set_common_options(table, field_id):
     table.set(showColumns=True)
 
     # Set pagination, and a switch which allows turning pagination off.
-    table.set(pagination=True, pageSize=5, pageList=[5, 10, 25, 50])
+    table.set(pagination=True, pageSize=10, pageList=[5, 10, 25, 50, 100])
     table.set(showPaginationSwitch=True)
 
     # Move label into toolbar area, to make it look as a part of the table.
     table.set(toolbar='label[for={0}]'.format(field_id))
 
-    # To have both header and contents horizontally centered so (h)align.
     table.columns.add(field='nr', title='#', align='center',
                       sortable=True, halign='center', valign='middle')
     table.columns.add(field='sample', title='Name', sortable=True,
@@ -105,6 +104,46 @@ class SelectSampleForm(forms.Form):
     selected_sample = BootstrapTableChoiceField(
         choices=enumerate(sample_list),
         widget=table)
+
+
+class SelectSampleWithMetaDataForm(forms.Form):
+
+    type_of_analysis = field_with_bootstrap_class(
+        ChoiceField,
+        choices=zip(bipype_variant_list, bipype_variant_list))
+
+    #
+    #  CODE BELOW FOR TEST PURPOSES ONLY
+    #
+
+    meta_table = BootstrapTableSelect('library_id')
+    meta_table.set(search=True)
+
+    # showColumns is a switch, allowing to choose which columns are visible.
+    meta_table.set(showColumns=True)
+
+    # Set pagination, and a switch which allows turning pagination off.
+    meta_table.set(pagination=True, pageSize=10, pageList=[5, 10, 25, 50, 100])
+    meta_table.set(showPaginationSwitch=True)
+
+    # Move label into toolbar area, to make it look as a part of the table.
+    meta_table.set(toolbar='label[for={0}]'.format('id_selected_sample_test'))
+
+    headers, rows = helpers.load_metadata()
+
+    # TODO: Add here other required columns
+    if 'library_id' not in headers:
+        raise KeyError('library_id column needed')
+
+    for header in headers:
+        meta_table.columns.add(
+            field=header,
+            title=forms.pretty_name(header),
+            align='center', sortable=True, halign='center', valign='middle')
+
+    selected_sample_test = BootstrapTableChoiceField(
+        choices=rows,
+        widget=meta_table)
 
 
 class MetatranscriptomicsForm(forms.Form):

@@ -83,6 +83,14 @@ def new_meta(request):
         return render(request, 'metatranscriptomics.html', data)
 
 
+def test(request):
+    form = forms.SelectSampleWithMetaDataForm()
+    data = {'messages': [],
+            'form': form}
+
+    return render(request, 'new_job.html', data)
+
+
 def remove(request):
 
     messages = []

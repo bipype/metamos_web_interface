@@ -2,10 +2,11 @@
 import os
 import urllib
 from tempfile import mkdtemp
-from paths import SAMPLE_PATH, WORKFLOWS_PATH
+from paths import SAMPLE_PATH, WORKFLOWS_PATH, PATH_METADATA
 from metAMOS_web.models import Results
 from django.forms.forms import pretty_name
 from django.utils.safestring import mark_safe
+from openpyxl import load_workbook
 import job_manager
 import shutil
 import re
@@ -141,3 +142,17 @@ def get_paired_samples(sample_list):
 
 def get_workflow_pretty_names():
     return ['amplicons', 'biodiversity']
+
+
+def load_metadata():
+    workbook = load_workbook(filename=PATH_METADATA, read_only=True)
+
+    headers = []
+    rows = []
+
+    for sheet in workbook:
+        sheet_rows = sheet.rows
+        headers += [h.value for h in next(sheet_rows)]
+        rows += [[cell.value for cell in row] for row in sheet_rows]
+
+    return headers, rows
