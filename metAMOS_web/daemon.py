@@ -17,7 +17,7 @@ import metAMOS_web_interface.settings as settings
 setup_environ(settings)
 import shutil
 import glob
-from helpers import real_path
+import helpers
 from job_manager import JobManager
 
 SUBPROCESS_ENV = os.environ.copy()
@@ -109,35 +109,12 @@ def run_metatranscriptomics(job, results_object):
     with open(config_file_path, 'w') as f:
         f.write(results_object.reference_condition)
 
-        import re
+        for paired in results_object.files:
 
-        without_r = re.compile('_R\d_')
-
-        files = results_object.files
-        base = set(without_r.sub('', x) for x in files)
-        R1 = filter(lambda x: x.find('_R1_') != -1, files)
-        R2 = filter(lambda x: x.find('_R2_') != -1, files)
-
-        print files
-        print base
-        print R1
-        print R2
-
-        for base_name in base:
-            r1_file = filter(lambda x: without_r.sub('', x) == base_name, R1)[0]
-            r2_file = filter(lambda x: without_r.sub('', x) == base_name, R2)[0]
-
-            try:
-                condition = results_object.conditions[r1_file]
-            except KeyError:
-                condition = results_object.conditions[r2_file]
-
-            r1_file = real_path(r1_file)
-            r2_file = real_path(r2_file)
-            print r1_file, r2_file, condition
+            condition = results_object.conditions[paired]
+            r1_file, r2_file = map(helpers.real_path, paired.split(' '))
 
             line = ' '.join([r1_file, r2_file, condition])
-
             f.write('\n' + line)
 
     update_progress(job, 4)
@@ -156,8 +133,6 @@ def run_metatranscriptomics(job, results_object):
         '--out_dir',
         results_object.real_path
     ]
-
-    print "COMMNADS:", commands
 
     command = ' '.join(commands)
     print command
@@ -186,7 +161,7 @@ def run_metatranscriptomics(job, results_object):
 
 if __name__ == '__main__':
 
-    job_manager = JobManager()
+    job_manager = JobManager(debug_mode=settings.DEBUG)
     job_manager.add_callback(run_metatranscriptomics, 'metatranscriptomics')
     job_manager.add_callback(run_metamos, 'default')
 

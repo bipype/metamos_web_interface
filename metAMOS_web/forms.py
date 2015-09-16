@@ -5,15 +5,15 @@ from bootstrap_tables.widgets import BootstrapTableSelect
 from bootstrap_tables.widgets import BootstrapTableSelectMultiple
 from bootstrap_tables.fields import BootstrapTableChoiceField
 from bootstrap_tables.fields import BootstrapTableMultipleChoiceField
-
+import helpers
 import sys
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
-from helpers import get_pretty_sample_list, get_workflow_pretty_names
 
-bipype_variant_list = get_workflow_pretty_names()
-sample_list = get_pretty_sample_list()
+
+bipype_variant_list = helpers.get_workflow_pretty_names()
+sample_list = helpers.get_pretty_sample_list()
 
 
 def field_with_bootstrap_class(field, **kwargs):
@@ -118,10 +118,12 @@ class MetatranscriptomicsForm(forms.Form):
     input_template = '<input type="text" class="form-control input-sm" ' \
                      'name="conditions[{0}]" onclick="stopPropagation(event)">'
 
+    paired_sample_list = helpers.get_paired_samples(sample_list)
+
     rows = []
-    for i, sample in enumerate(sample_list):
-        condition_input = input_template.format(sample)
-        row = [i, sample, condition_input]
+    for i, samples in enumerate(paired_sample_list):
+        condition_input = input_template.format(samples)
+        row = [i, samples, condition_input]
         rows.append(row)
 
     selected_files = BootstrapTableMultipleChoiceField(

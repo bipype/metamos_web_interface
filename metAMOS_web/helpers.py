@@ -8,6 +8,7 @@ from django.forms.forms import pretty_name
 from django.utils.safestring import mark_safe
 import job_manager
 import shutil
+import re
 
 
 def real_path(path):
@@ -91,11 +92,51 @@ def get_bipype_variant_list():
 
 def get_pretty_sample_list():
     samples = []
-    for alias, real_path in SAMPLE_PATH.items():
-        for a_file in os.listdir(real_path):
+    for alias, real_dir_path in SAMPLE_PATH.items():
+        for a_file in os.listdir(real_dir_path):
             if not (a_file.endswith('.d') or a_file.endswith('.py')) and a_file.find('fast') != -1:
                 samples.append(alias + '/' + a_file)
     return samples
+
+
+def get_paired_samples(sample_list):
+    """
+    Complies list of samples, where elements are strings containing pairs of
+    reads (reads are separated by space). To match reads from given sample_list,
+    this function looks for presence of _R1_ and _R2_ substrings in filenames.
+    If the pair couldn't be created because there is a missing complementary
+    read - the existing one will be skipped.
+    """
+    catch_r = re.compile('_R\d_')
+
+    bases = set(catch_r.sub('', x) for x in sample_list)
+    r1 = filter(lambda x: '_R1_' in x, sample_list)
+    r2 = filter(lambda x: '_R2_' in x, sample_list)
+
+    paired_sample_list = []
+
+    for base in bases:
+
+        try:
+
+            r1_file = filter(lambda x: catch_r.sub('', x) == base, r1)[0]
+            r2_file = filter(lambda x: catch_r.sub('', x) == base, r2)[0]
+
+            # spaces are not allowed in filenames - it is forced by
+            # metatranscriptomics_bipype so here we can take advantage of it
+            # and use a space as an universal separator. But only to be certain
+            # we are an assertion here, so samples whose names doesn't abide
+            # with this rule could be quickly localized.
+            assert ' ' not in r1_file and ' ' not in r2_file
+            entry = ' '.join([r1_file, r2_file])
+
+            paired_sample_list.append(entry)
+
+        except IndexError:
+            # there is a missing read (R1 or R2) for the base, so skip this one.
+            pass
+
+    return paired_sample_list
 
 
 def get_workflow_pretty_names():

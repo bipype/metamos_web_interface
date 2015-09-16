@@ -24,9 +24,10 @@
 {% block content %}
   {% include "messages.html" with messages=messages %}
   <h1>Metatranscriptomics</h1>
-  <p>Please, select files to be analysed <mark>(both: R1 and R2 required)</mark>,
-  specify conditions per pair (it means, you can skip retyping it for second read)
-  and give the reference condition.</p>
+  <p>Please, select files to be analysed, specify conditions per pair and give the reference condition.</p>
+  <p>Note, that the entries in the table where chosen and grouped automatically - since both R1 and R2 reads are required,
+  the system looks for pairs of samples comprised of samples with similar filenames, which differ only by _R1_ and _R2_ fragments in these names
+    (please, notice underscores <code>_</code> before and after read identifier).</p>
   <form name="metatranscriptomics-form" method="post">
     {% csrf_token %}
     <div class="form-inline">
@@ -48,7 +49,7 @@
   <script type="text/javascript">
   function stopPropagation(e)
   {
-    var event = e || window.event
+    var event = e || window.event;
 
     if(event.stopPropagation)
     {
