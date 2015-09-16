@@ -81,8 +81,9 @@ class JobManager(object):
     lack_cb_template = 'Job manager has neither generic ("default"), ' \
                        'nor specific callback for {0} job type.'
 
-    def __init__(self):
+    def __init__(self, debug_mode=False):
         self.callbacks = {}
+        self.debug = debug_mode
 
     def add_callback(self, callback_function, results_type='default'):
         self.callbacks[results_type] = callback_function
@@ -120,10 +121,12 @@ class JobManager(object):
 
         except Exception as error:
 
-            feedback = error.message + '\n\n'
-            feedback += traceback.format_exc()
+            if self.debug:
+                feedback = traceback.format_exc()
+                print feedback
+            else:
+                feedback = error.message
 
-            print feedback
             job.error = feedback
 
         job.save()

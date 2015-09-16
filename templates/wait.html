@@ -17,21 +17,16 @@
       <span class="sr-only" id="progressbar-text">{{ progress }}% Complete</span>
     </div>
   </div>
-  <p>
-      <button type="button" class="btn btn-default" onclick="$(this).hide();$('#state').show()">
-          Show state
-      </button>
-  </p>
-  <div class="alert alert-info" role="alert" id="state" style="display:none">
+  <div class="alert alert-info" role="alert" id="state">
       Your job is {{ state }}
   </div>
-  <pre id="errors" style="display:none"></pre>
+  <pre id="errors" style="display: none"></pre>
   <script type="text/javascript">
     var url = "/biogaz/get_status/{{ path }}/{{ type_of_analysis }}";
 
     function progress(value)
     {
-      $('#progressbar').css('width', value+'%').attr('aria-valuenow', value);
+      $('#progressbar').css('width', value + '%').attr('aria-valuenow', value);
       $('#progressbar-text').text(value + '% complete')
     }
 
@@ -39,29 +34,26 @@
     {
       $.getJSON(url, function(data)
       {
-        value = data.progress;
-        progress(value);
-        if(value == 100)
+        progress(data.progress);
+        if(data.progress == 100)
         {
           location.reload();
         }
-        
-        state = data.state;
-        if(state == "failed")
+
+        var state = $("#state");
+        if(data.state == "failed")
         {
-          $("#state").addClass("alert-danger")
-          $("#state").html("Unfortunately, this job failed. If it is the first time, you can try to " +
-          "<a href='/biogaz/new'>launch it again</a>.")
-          $("#state").show()
+          state.html("Unfortunately, this job failed. If it is the first time, you can try to " +
+          "<a href='javascript: window.history.go(-1)'>launch it again</a>.");
+          state.addClass("alert-danger").show();
           if (data.error)
           {
-          $("#errors").text(data.error)
-           $("#errors").show()
+            $("#errors").text(data.error).show();
           }
         }
         else
         {
-            $("#state").text("Your job is " + state)
+            state.text("Your job is " + data.state)
         }
 
         error = data.state;
@@ -70,7 +62,7 @@
 
     $(document).ready(function()
     {
-      setInterval(update_status, 5000);
+      setInterval(update_status, 4000);
     });
   </script>
 {% endblock %}

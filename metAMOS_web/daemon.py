@@ -198,4 +198,4 @@ if __name__ == '__main__':
             sleep(1)
         else:
             # let's be more friendly for server if the queue was empty last time
-            sleep(10)
+            sleep(5)
