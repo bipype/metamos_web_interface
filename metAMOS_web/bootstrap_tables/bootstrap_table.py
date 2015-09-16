@@ -168,12 +168,12 @@ class Container(object):
         # These lines allows you to pass JavaScript names *without
         # quotes*, so they can be properly interpreted
         if isinstance(value, Raw):
-            return str(value)
+            return unicode(value)
 
         # In case if we need some recursion
         if is_container(value):
             value.test_wrappers()
-            return str(value)
+            return unicode(value)
 
         # Eventually if it is some list, dict, numeral etc,
         # let it be parsed be standard json module
@@ -191,7 +191,7 @@ class Container(object):
         """
         return [self._format(data) for data in self._data]
 
-    def __str__(self):
+    def __unicode__(self):
         """
         Prints pretty representation of container in JSOL notation.
         """
@@ -358,20 +358,20 @@ class BootstrapTable(Object):
         if value.startswith('"') and value.endswith('"'):
             value = value[1:-1]
 
-        return key + '="' + value + '"'
+        return key + u'="' + value + u'"'
 
     def start_tag(self, tag, attr_dict):
         """
         Creates HTML opening tag with attributes from 'attr_dict'.
         """
-        out = '<' + tag
+        out = u'<' + tag
 
         attributes = map(self.create_attribute, attr_dict.iteritems())
 
         if attributes:
-            out += ' '
+            out += u' '
 
-        out += " ".join(attributes) + '>'
+        out += u' '.join(attributes) + u'>'
 
         return out
 
@@ -382,11 +382,11 @@ class BootstrapTable(Object):
         """
         out = self.start_tag(tag, attr_dict)
         out += contents
-        out += '</' + tag + '>'
+        out += u'</' + tag + u'>'
 
         return out
 
-    def get_html_columns(self, spacer='\n'):
+    def get_html_columns(self, spacer=u'\n'):
         """
         Creates HTML table cells with content corresponding to data
         gathered about columns in 'self.columns' List.
@@ -396,32 +396,32 @@ class BootstrapTable(Object):
             # TODO: if it is list, then one more loop?
             if isinstance(item, Object):
                 data = copy.copy(item.as_attributes())
-                title = data.pop('title', '')
+                title = data.pop('title', u'')
             else:
                 data = {}
                 title = json.dumps(item)
-            out += spacer + self.create_tag('th', data, title)
+            out += spacer + self.create_tag(u'th', data, title)
         return out
 
-    def get_html_data_rows(self, spacer='\n'):
+    def get_html_data_rows(self, spacer=u'\n'):
         """
         Creates HTML table rows with content corresponding to data
         gathered about rows in 'self.rows' List.
         Only data referred by columns will be rendered.
         """
-        out = ''
+        out = u''
         for item in self.data.all():
-            out += spacer + '<tr>'
+            out += spacer + u'<tr>'
 
             if is_container(item):
                 for column in self.columns.all():
                     field = column.all()['field']
-                    content = item.all().get(field, '').__str__()
+                    content = unicode(item.all().get(field, u''))
 
                     out += spacer + self.indent
-                    out += self.create_tag('td', {}, content)
+                    out += self.create_tag(u'td', {}, content)
 
-            out += spacer + '</tr>'
+            out += spacer + u'</tr>'
         return out
 
     def as_html(self, additional_attributes=None, auto_load=False):
@@ -447,27 +447,27 @@ class BootstrapTable(Object):
         tr_spacer = self.new_line + self.indent
 
         if self.html_id:
-            data['id'] = self.html_id
+            data[u'id'] = self.html_id
 
         if additional_attributes:
             data.update(additional_attributes)
 
         if auto_load:
-            data['data-toggle'] = 'table'
+            data[u'data-toggle'] = u'table'
 
-        out = self.start_tag('table', data)
+        out = self.start_tag(u'table', data)
 
-        out += tr_spacer + '<thead>'
-        out += tr_spacer + '<tr>'
+        out += tr_spacer + u'<thead>'
+        out += tr_spacer + u'<tr>'
         out += self.get_html_columns(spacer=tr_spacer + self.indent)
-        out += tr_spacer + '</tr>'
-        out += tr_spacer + '</thead>'
+        out += tr_spacer + u'</tr>'
+        out += tr_spacer + u'</thead>'
 
-        out += tr_spacer + '<tbody>'
+        out += tr_spacer + u'<tbody>'
         out += self.get_html_data_rows(spacer=tr_spacer)
-        out += tr_spacer + '</tbody>'
+        out += tr_spacer + u'</tbody>'
 
-        out += self.new_line + "</table>"
+        out += self.new_line + u'</table>'
 
         return out
 
@@ -477,7 +477,7 @@ class BootstrapTable(Object):
         JavaScript Object Literal Notation string, so it could be
         used as an argument for BootstrapTable initializer.
         """
-        return self.__str__()
+        return self.__unicode__()
 
     def as_json(self, restrict_to=None):
         """
@@ -485,10 +485,10 @@ class BootstrapTable(Object):
         JavaScript Object Literal Notation to JSON string.
         """
 
-        if restrict_to == "columns":
-            jsol = str(self.columns)
-        elif restrict_to == "data":
-            jsol = str(self.data)
+        if restrict_to == 'columns':
+            jsol = unicode(self.columns)
+        elif restrict_to == 'data':
+            jsol = unicode(self.data)
         else:
             jsol = self.as_js()
 
@@ -504,12 +504,12 @@ class BootstrapTable(Object):
         assert self.html_id
         return self.js_call_template.format(id=self.html_id, data=self.as_js())
 
-    def __str__(self):
+    def __unicode__(self):
         """
         Returns string representation, including columns and data
         """
         self.set(columns=self.columns, data=self.data)
-        out = Object.__str__(self)
+        out = Object.__unicode__(self)
         self.set(columns='', data='')
         return out
 
