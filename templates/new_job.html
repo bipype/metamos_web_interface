@@ -8,10 +8,13 @@
   <p>To get results of analysis performed on given sample,
     choose type of analysis, select one sample and press 'Show results' button.
   </p>
+  <p>To filter libraries in the table below, please use 'Search' field.
+    To choose columns which should be visible click on the grid
+    <span class="glyphicon glyphicon-th" aria-hidden="true"></span> icon.
+  </p>
   <p>
-    Note, that if there are no results associated with particular sample,
-    they will be calculated and prepared, just after your request to show
-    these results. This might take a while, depending on size of your sample.
+    Note, that if there are no results associated with particular library,
+    they will be prepared, just after your request to show these results.
   </p>
   <form name="select-sample" method="post">
     {% csrf_token %}
