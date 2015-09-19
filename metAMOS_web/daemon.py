@@ -186,6 +186,10 @@ def run_metamos(job, results_object):
 
     update_progress(job, 5)
 
+    project_dir = os.path.join(sample.run_dir, 'metAMOS')
+
+    # TODO: this wont work without -i (format 300:500)
+
     commands = [
         os.path.join(app_paths.metAMOS, 'initPipeline'),
         '-1',
@@ -193,7 +197,7 @@ def run_metamos(job, results_object):
         '-2',
         ','.join(paths_for_read_2),
         '-d',
-        sample.run_dir
+        project_dir
     ]
 
     run_command(commands, job)
@@ -211,7 +215,7 @@ def run_metamos(job, results_object):
         '-a',
         'bipype_' + sample.type,
         '-d',
-        sample.run_dir
+        project_dir
     ]
 
     run_command(commands, job)
