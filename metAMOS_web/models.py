@@ -1,7 +1,7 @@
 import json
-import paths
 import os
 from django.db import models
+from paths import app_paths
 
 import sys
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
@@ -37,9 +37,39 @@ class Results(models.Model):
     """
 
     """
+    # TODO: this should be renamed to dir_name
     path = models.CharField(max_length=256, primary_key=True)
     type = models.CharField(max_length=256)
     job = models.OneToOneField(Job, null=True)
+    libraries = JSONField()
+    library_ids = JSONField()
+
+    @property
+    def dir_path(self):
+        """
+        Path to dir where all files related to this results should be kept
+        """
+        return os.path.join(app_paths.storage, self.type, self.path)
+
+    @property
+    def output_dir(self):
+        """
+        Path to dir where final results should be placed
+        """
+        return os.path.join(self.dir_path, 'output')
+
+    @property
+    def run_dir(self):
+        """
+        Path to dir where final results should be placed
+        """
+        return os.path.join(self.dir_path, 'run')
+
+    @property
+    def input_dir(self):
+        """
+        """
+        return os.path.join(self.dir_path, 'input')
 
     def cast(self):
         for name in dir(self):
@@ -53,62 +83,16 @@ class Results(models.Model):
 
 
 class SampleResults(Results):
-    """
-    path - unique path; represents path to original sample
-    """
 
     @property
     def html_path(self):
         """
         Returns path to main HTML file with results. 
         """
-        return os.path.join(self.out_dir_path, 'krona.html')
-
-    @property
-    def real_path(self):
-        """
-        Returns real location of the object on the server; by default
-        server-specific part of path is hidden away from end-user.
-        """
-        from string import Template
-        # use of substitution dict from paths.SAMPLE_PATH
-        return Template('$' + self.path).substitute(paths.SAMPLE_PATH)
-
-    @property
-    def dir_path(self):
-        """
-        Returns path to dir where all results should be kept 
-        """
-        return self.real_path + '.d'
-
-    @property
-    def out_dir_path(self):
-        """
-        Returns path to dir where final outputs should be placed
-        """
-        return os.path.join(self.dir_path, 'bipype_output', self.type)
+        return os.path.join(self.output_dir, 'krona.html')
 
 
 class MetaResults(Results):
-    """
-    path - unique path; represents path to dir with results
-    """
+
     reference_condition = models.CharField(max_length=256)
-    files = JSONField()
     conditions = JSONField()
-
-    @property
-    def real_path(self):
-        """
-        Returns real location of the object on the server; by default
-        server-specific part of path is hidden away from end-user.
-        """
-        return os.path.join(paths.PATH_METATR_OUT_DIR, self.path)
-
-    @property
-    def dir_path(self):
-        """
-        Returns path to dir where all results should be kept.
-        """
-        return self.real_path
-

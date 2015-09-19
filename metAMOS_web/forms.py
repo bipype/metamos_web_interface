@@ -6,14 +6,17 @@ from bootstrap_tables.widgets import BootstrapTableSelectMultiple
 from bootstrap_tables.fields import BootstrapTableChoiceField
 from bootstrap_tables.fields import BootstrapTableMultipleChoiceField
 import helpers
+from metadata import MetadataManager
 import sys
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
 
 
+visible_on_start = ['library_name', 'library_comments', 'localization', 'type']
 bipype_variant_list = helpers.get_workflow_pretty_names()
-sample_list = helpers.get_pretty_sample_list()
+metadata = MetadataManager()
+metadata.from_file()
 
 
 def field_with_bootstrap_class(field, **kwargs):
@@ -75,10 +78,14 @@ def set_common_options(table, field_id):
     # Move label into toolbar area, to make it look as a part of the table.
     table.set(toolbar='label[for={0}]'.format(field_id))
 
-    table.columns.add(field='nr', title='#', align='center',
-                      sortable=True, halign='center', valign='middle')
-    table.columns.add(field='sample', title='Name', sortable=True,
-                      valign='middle')
+    for header in metadata.headers:
+        table.columns.add(field=header,
+                          visible=bool(header in visible_on_start),
+                          title=forms.pretty_name(header),
+                          align='left',
+                          sortable=True,
+                          halign='left',
+                          valign='middle')
 
 
 class SelectSampleForm(forms.Form):
@@ -95,87 +102,44 @@ class SelectSampleForm(forms.Form):
         ChoiceField,
         choices=zip(bipype_variant_list, bipype_variant_list))
 
-    table = BootstrapTableSelect('sample')
-    set_common_options(table, 'id_selected_sample')
+    table = BootstrapTableSelect(metadata.id_column)
 
-    # Use BootstrapTableSelect widget here, instead of default Select widget.
-    # Note, that fields created with widgets from bootstrap_tables package
-    # doesn't need to be wrapped with field_with_bootstrap_class() function.
-    selected_sample = BootstrapTableChoiceField(
-        choices=enumerate(sample_list),
+    set_common_options(table, 'id_library_id')
+
+    library_id = BootstrapTableChoiceField(
+        choices=metadata.rows,
         widget=table)
-
-
-class SelectSampleWithMetaDataForm(forms.Form):
-
-    type_of_analysis = field_with_bootstrap_class(
-        ChoiceField,
-        choices=zip(bipype_variant_list, bipype_variant_list))
-
-    #
-    #  CODE BELOW FOR TEST PURPOSES ONLY
-    #
-
-    meta_table = BootstrapTableSelect('library_id')
-    meta_table.set(search=True)
-
-    # showColumns is a switch, allowing to choose which columns are visible.
-    meta_table.set(showColumns=True)
-
-    # Set pagination, and a switch which allows turning pagination off.
-    meta_table.set(pagination=True, pageSize=10, pageList=[5, 10, 25, 50, 100])
-    meta_table.set(showPaginationSwitch=True)
-
-    # Move label into toolbar area, to make it look as a part of the table.
-    meta_table.set(toolbar='label[for={0}]'.format('id_selected_sample_test'))
-
-    headers, rows = helpers.load_metadata()
-
-    # TODO: Add here other required columns
-    if 'library_id' not in headers:
-        raise KeyError('library_id column needed')
-
-    for header in headers:
-        meta_table.columns.add(
-            field=header,
-            title=forms.pretty_name(header),
-            align='center', sortable=True, halign='center', valign='middle')
-
-    selected_sample_test = BootstrapTableChoiceField(
-        choices=rows,
-        widget=meta_table)
 
 
 class MetatranscriptomicsForm(forms.Form):
 
-    table = BootstrapTableSelectMultiple('sample')
-    set_common_options(table, 'id_selected_files')
-    table.columns.add(field='condition', title='Condition')
+    table = BootstrapTableSelectMultiple(metadata.id_column)
+    set_common_options(table, 'id_library_ids')
 
     reference_condition = field_with_bootstrap_class(CharField)
 
     input_template = '<input type="text" class="form-control input-sm" ' \
                      'name="conditions[{0}]" onclick="stopPropagation(event)">'
 
-    paired_sample_list = helpers.get_paired_samples(sample_list)
+    table.columns.add(field='condition', title='Condition')
 
     rows = []
-    for i, samples in enumerate(paired_sample_list):
-        condition_input = input_template.format(samples)
-        row = [i, samples, condition_input]
+    for row in metadata.rows:
+        library_id = row[metadata.id_index]
+        condition_input = input_template.format(library_id)
+        row.append(condition_input)
         rows.append(row)
 
-    selected_files = BootstrapTableMultipleChoiceField(
+    library_ids = BootstrapTableMultipleChoiceField(
         choices=rows,
         widget=table)
 
 
-class RemoveSampleForm(forms.Form):
+class RemoveResultsForm(forms.Form):
 
-    table = BootstrapTableSelectMultiple('sample')
-    set_common_options(table, 'id_samples_to_remove')
+    table = BootstrapTableSelectMultiple(metadata.id_column)
+    set_common_options(table, 'id_results_to_remove')
 
-    samples_to_remove = BootstrapTableMultipleChoiceField(
-        choices=enumerate(sample_list),
+    results_to_remove = BootstrapTableMultipleChoiceField(
+        choices=metadata.rows,
         widget=table)
-

@@ -6,9 +6,16 @@ sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
 
+from metadata import MetadataManager
 import job_manager
 import forms
 import helpers
+from paths import app_paths, encode, decode
+
+
+# init once, since we will need to use it twice
+metadata = MetadataManager()
+metadata.from_file()
 
 
 def index(request):
@@ -23,15 +30,15 @@ def new(request):
 
         from models import SampleResults
 
-        data = {'type': form.cleaned_data['type_of_analysis'],
-                'path': form.cleaned_data['selected_sample']}
+        library_id = form.cleaned_data['library_id']
+        type_of_analysis = form.cleaned_data['type_of_analysis']
 
-        try:
-            results_object = SampleResults.objects.get(**data)
-        except ObjectDoesNotExist:
-            results_object = SampleResults.objects.create(**data)
+        data = {
+            'type': type_of_analysis,
+            'library_ids': [library_id]
+        }
 
-        return result_redirect(request, results_object)
+        return result_redirect(SampleResults, data)
 
     else:
 
@@ -49,29 +56,20 @@ def new_meta(request):
 
     if form.is_valid():
 
-        from paths import PATH_METATR_OUT_DIR
         from models import MetaResults
 
         raw_data = request.POST
         conditions = {}
 
-        for meta_file in form.cleaned_data['selected_files']:
-            conditions[meta_file] = raw_data.get('conditions[%s]' % meta_file)
+        for library_id in form.cleaned_data['library_ids']:
+            conditions[library_id] = raw_data.get('conditions[%s]' % library_id)
 
         data = {'type': 'metatranscriptomics',
-                'files': form.cleaned_data['selected_files'],
+                'library_ids': form.cleaned_data['library_ids'],
                 'conditions': conditions,
                 'reference_condition': form.cleaned_data['reference_condition']}
 
-        try:
-            results_object = MetaResults.objects.get(**data)
-
-        except ObjectDoesNotExist:
-            # let's create unique but not so long name dir for our output
-            data['path'] = helpers.make_unique_dir(PATH_METATR_OUT_DIR)
-            results_object = MetaResults.objects.create(**data)
-
-        return result_redirect(request, results_object)
+        return result_redirect(MetaResults, data)
 
     else:
 
@@ -83,23 +81,15 @@ def new_meta(request):
         return render(request, 'metatranscriptomics.html', data)
 
 
-def test(request):
-    form = forms.SelectSampleWithMetaDataForm()
-    data = {'messages': [],
-            'form': form}
-
-    return render(request, 'new_job.html', data)
-
-
 def remove(request):
 
     messages = []
 
-    form = forms.RemoveSampleForm(request.POST or None)
+    form = forms.RemoveResultsForm(request.POST or None)
 
     if form.is_valid():
 
-        selected = form.cleaned_data['samples_to_remove']
+        selected = form.cleaned_data['results_to_remove']
 
         if not selected:
             messages.append({
@@ -107,30 +97,33 @@ def remove(request):
                 'type': 'info'
             })
 
-        for sample_name in selected:
+        for library_id in selected:
 
-            results_data = {'path': sample_name}
-            success = helpers.remove_results_by_data(**results_data)
+            success = helpers.remove_results_by_library_id(library_id)
+
+            library = metadata.explain_row(metadata.get_row(library_id))
+
+            name = library['library_name'] + ' (id: {0})'.format(library_id)
 
             if success:
                 messages.append({
                     'title': 'Success!',
                     'contents': 'Results associated with {0} '
-                                'have been removed'.format(sample_name),
+                                'have been removed'.format(name),
                     'type': 'success'
                 })
             elif success is None:
                 messages.append({
                     'title': 'Nothing to do!',
                     'contents': 'There are no results associated with '
-                                '{0} in the database'.format(sample_name),
+                                '{0} in the database'.format(name),
                     'type': 'info'
                 })
             else:
                 messages.append({
                     'title': 'Operation failed',
                     'contents': 'Unable to remove results '
-                                'associated with: {0}'.format(sample_name),
+                                'associated with: {0}'.format(name),
                     'type': 'danger'
                 })
     else:
@@ -142,10 +135,18 @@ def remove(request):
     return render(request, 'remove.html', data)
 
 
-def result_redirect(request, results_object):
+def result_redirect(model, data):
+
+    data['libraries'] = metadata.get_subset(data['library_ids'])
+
+    try:
+        results_object = model.objects.get(**data)
+    except ObjectDoesNotExist:
+        data['path'] = app_paths.unique_path_for(data['type'])
+        results_object = model.objects.create(**data)
 
     destination = '/biogaz/result/{path}/{type}'.format(
-        path=helpers.encode_path(results_object.path),
+        path=encode(results_object.path),
         type=results_object.type)
 
     return HttpResponseRedirect(destination)
@@ -153,7 +154,7 @@ def result_redirect(request, results_object):
 
 def get_status(request, path, type_of_analysis):
     import json
-    path = helpers.decode_path(path)
+    path = decode(path)
     results_object = helpers.get_results_object(type=type_of_analysis, path=path)
     to_json = {'progress': job_manager.get_progress(results_object.job),
                'state': job_manager.get_job_state(results_object.job),
@@ -192,7 +193,7 @@ def wait(request, data):
 
 def result(request, path, type_of_analysis):
 
-    path = helpers.decode_path(path)
+    path = decode(path)
 
     try:
         results_object = helpers.get_results_object(type=type_of_analysis,
@@ -211,7 +212,7 @@ def result(request, path, type_of_analysis):
             from django.forms.forms import pretty_name
             import os
             file_list = []
-            parent_dir = results_object.dir_path
+            parent_dir = results_object.output_dir
             for root, dirs, files in os.walk(parent_dir):
                 
                 for name in files:
@@ -255,7 +256,7 @@ def result(request, path, type_of_analysis):
 
         progress = job_manager.get_progress(results_object.job)
 
-        data = {'path': helpers.encode_path(path),
+        data = {'path': encode(path),
                 'type_of_analysis': type_of_analysis,
                 'progress': progress,
                 'state': state}

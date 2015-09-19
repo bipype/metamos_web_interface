@@ -119,7 +119,7 @@ class JobManager(object):
 
             job.error = "Daemon execution terminated by system exit"
 
-        except Exception as error:
+        except BaseException as error:
 
             if self.debug:
                 feedback = traceback.format_exc()
