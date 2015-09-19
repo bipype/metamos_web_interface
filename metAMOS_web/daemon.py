@@ -184,12 +184,35 @@ def run_metamos(job, results_object):
 
     paths_for_read_1, paths_for_read_2 = get_paired_paths(libraries_paths)
 
+    assert len(paths_for_read_1) == len(paths_for_read_2)
+    count = len(paths_for_read_1)
+
     update_progress(job, 5)
 
     project_dir = os.path.join(sample.run_dir, 'metAMOS')
 
-    # TODO: this wont work without -i (format 300:500)
+    """
+    In the first version we were initialising metAMOS with use of a list of
+    FASTA files (something like '-1 file_1.fasta,file_2.fasta'); use of only
+    '-1' parameter indicated that it were served as 'non-paired files of reads'.
 
+    After rewriting daemon to use 'fastq' files as input, we changed this
+    behaviour, so there are two lists of files, split by reads, in order defined
+    by rule: file [x] on list one is complementary to file [x] on list two.
+
+    This change forced us to introduce parameter '-i', which means 'insert size'
+    which is needed to go through metAMOS initialization without error,
+    since '-i' is obligatory when we are passing libraries with mated reads.
+
+    Because we are using currently only 'Preprocess' step in metAMOS, we
+    inspected what behaviour is this parameter responsible for in this step:
+
+    In 'Preprocess', values derived from 'insert size' (it est mean and standard
+    deviation) are used only with libraries in 'stff' format and this is not our
+    case (currently we are using 'fastq'), hence we don't have to take care of
+    this parameter - we only needs to pass it. So let's pass list of 0:0,
+    elements of length equal to the count of libraries.
+    """
     commands = [
         os.path.join(app_paths.metAMOS, 'initPipeline'),
         '-1',
@@ -197,7 +220,9 @@ def run_metamos(job, results_object):
         '-2',
         ','.join(paths_for_read_2),
         '-d',
-        project_dir
+        project_dir,
+        '-i',
+        ','.join(['0:0'] * count)
     ]
 
     run_command(commands, job)
@@ -210,8 +235,8 @@ def run_metamos(job, results_object):
         os.path.join(app_paths.metAMOS, 'runPipeline'),
         '-n',
         skip,
-        # following two lines forces metAMOS to use our custom commands from
-        # .spec files as an assembler, despite it really isn't an assembler
+        # following two lines forces metAMOS to use our commands from .spec
+        # files in place of an assembler, despite it really isn't an assembler
         '-a',
         'bipype_' + sample.type,
         '-d',
