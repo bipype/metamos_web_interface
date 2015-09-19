@@ -272,11 +272,12 @@ class Object(Container):
         """
         Return contents, formatted as it is required to use them as
         HTML attributes (keys will be decamelized and prefixed with 'data-', so
-        BactrianCamel will become data-bactrian-camel). Items with empty values
-        or other values considered false will be skipped.
+        BactrianCamel will become data-bactrian-camel). Items with empty string
+        values will be skipped.
         """
         item_iterator = self._data.iteritems()
-        return {'data-' + self.decamelize(x): y for x, y in item_iterator if y}
+        return {'data-' + self.decamelize(x): y
+                for x, y in item_iterator if y != ''}  # allow False, but not ''
 
 
 class List(Container):

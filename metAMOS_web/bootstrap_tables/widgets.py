@@ -75,7 +75,7 @@ class BootstrapTableWidget(BootstrapTable, Widget):
         if index < 0:
             return []
 
-        return [choice_columns[index] for choice_columns in self.choices]
+        return [str(choice_columns[index]) for choice_columns in self.choices]
 
     def get_index_of_column_with_field_to_send(self):
         """
