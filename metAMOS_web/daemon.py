@@ -210,7 +210,7 @@ def run_metamos(job, results_object):
     In 'Preprocess', values derived from 'insert size' (it est mean and standard
     deviation) are used only with libraries in 'stff' format and this is not our
     case (currently we are using 'fastq'), hence we don't have to take care of
-    this parameter - we only needs to pass it. So let's pass list of 0:0,
+    this parameter - we only need to pass it. So let's pass list of 0:0,
     elements of length equal to the count of libraries.
     """
     commands = [
@@ -318,10 +318,6 @@ def run_metatranscriptomics(job, results_object):
     update_progress(job, 5)
 
     run_command(commands, job)
-
-    # TODO:
-    # seek for information about progress
-    # be happy if job finished successfully
 
     update_progress(job, 100)
 
