@@ -247,10 +247,10 @@ def run_metamos(job, results_object):
 
     update_progress(job, 90)
 
-    path_name = os.path.join(sample.run_dir, 'Assemble/out/out2/*.html')
+    path_name = os.path.join(sample.run_dir, 'Assemble/out/*.html')
     krona_html = glob(path_name)
 
-    # there should be exactly one krona *.html file in Assemble/out/out2/
+    # there should be exactly one krona *.html file in Assemble/out/
     assert len(krona_html) == 1
 
     shutil.copyfile(krona_html[0], sample.html_path)
