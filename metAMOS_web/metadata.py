@@ -130,7 +130,7 @@ class MetadataManager(object):
                 row[-1].append(packed_path)
 
         if count < 1:
-            raise FilesNotFoundError('No libraries found')
+            raise FilesNotFoundError('No libraries found in: %s ' % sources)
 
         return paths
 
