@@ -189,7 +189,18 @@ def run_metamos(job, results_object):
 
     update_progress(job, 5)
 
-    project_dir = os.path.join(sample.run_dir, 'metAMOS')
+    # This is also some type of hack; since for use of bipype we will need an
+    # adapter sequence which is a part of filename, we will want to preserve it
+    # - metAMOS destroys filenames which it gets and returns only some silly
+    # 'lib1.1.fastq' or sth like that. But we can store this information in path
+    # nonetheless - and we are using name of project directory for this purpose.
+    # Please, note that if there are more than two paths (count > 1), then
+    # this will be ambiguous, but this is not the case when we will need
+    # this to use in bipype - it operates on only two files for amplicons.
+    basenames = map(os.path.basename, paths_for_read_1 + paths_for_read_2)
+    common_prefix = os.path.commonprefix(basenames)
+
+    project_dir = os.path.join(sample.run_dir, common_prefix)
 
     """
     In the first version we were initialising metAMOS with use of a list of
@@ -247,7 +258,7 @@ def run_metamos(job, results_object):
 
     update_progress(job, 90)
 
-    path_name = os.path.join(sample.run_dir, 'Assemble/out/*.html')
+    path_name = os.path.join(project_dir, 'Assemble/out/*.html')
     krona_html = glob(path_name)
 
     # there should be exactly one krona *.html file in Assemble/out/
