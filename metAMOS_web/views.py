@@ -171,7 +171,7 @@ def show_html(file_path):
 def result_html(request, path, type_of_analysis, file_path):
     import os
     results_object = helpers.get_results_object(type=type_of_analysis, path=path)
-    absolute_path = os.path.join(results_object.real_path, file_path)
+    absolute_path = os.path.join(results_object.output_dir, file_path)
     return show_html(absolute_path)
 
 
@@ -179,7 +179,7 @@ def result_download(request, path, type_of_analysis, file_path):
     import mimetypes
     import os
     results_object = helpers.get_results_object(type=type_of_analysis, path=path)
-    absolute_path = os.path.join(results_object.real_path, file_path)
+    absolute_path = os.path.join(results_object.output_dir, file_path)
     mime = mimetypes.guess_type(absolute_path)
     fsock = open(absolute_path, 'r')
     response = HttpResponse(fsock, mimetype=mime)
