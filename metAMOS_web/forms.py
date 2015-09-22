@@ -1,11 +1,12 @@
 from django.forms import forms
 from django.forms.fields import CharField
 from django.forms.fields import ChoiceField
+from django.forms.forms import pretty_name
+from django.utils.safestring import mark_safe
 from bootstrap_tables.widgets import BootstrapTableSelect
 from bootstrap_tables.widgets import BootstrapTableSelectMultiple
 from bootstrap_tables.fields import BootstrapTableChoiceField
 from bootstrap_tables.fields import BootstrapTableMultipleChoiceField
-import helpers
 from metadata import MetadataManager
 import sys
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
@@ -13,10 +14,35 @@ sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
 sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
 
 
+def get_types_of_analyses():
+    import os
+    import re
+    from paths import app_paths
+    analyses = []
+    for analysis in os.listdir(app_paths.workflows):
+        match = re.match('bipype_(.*?)\.spec', analysis)
+        if match:
+            analyses.append(match.group(1))
+    return analyses
+
 visible_on_start = ['library_name', 'library_comments', 'localization', 'type']
-bipype_variant_list = helpers.get_workflow_pretty_names()
+bipype_variant_list = get_types_of_analyses()
+
 metadata = MetadataManager()
 metadata.from_file()
+
+
+def errors_to_messages(errors):
+    messages = []
+    for field, error in errors.iteritems():
+        title = '<u>{0}</u> needs a correction:'.format(pretty_name(field))
+        title = mark_safe(title)
+        messages.append({
+            'title': title,
+            'contents': error.as_text().lstrip("* ").lower(),
+            'type': 'warning'
+        })
+    return messages
 
 
 def field_with_bootstrap_class(field, **kwargs):
@@ -60,6 +86,18 @@ def field_with_bootstrap_class(field, **kwargs):
     return field(**kwargs)
 
 
+def add_metadata_headers(table, meta_data):
+
+    for header in meta_data.headers:
+        table.columns.add(field=header,
+                          visible=bool(header in visible_on_start),
+                          title=forms.pretty_name(header),
+                          align='left',
+                          sortable=True,
+                          halign='left',
+                          valign='middle')
+
+
 def set_common_options(table, field_id):
     """
     On object 'table' of class BootstrapTableWidget or subclasses set common
@@ -78,14 +116,7 @@ def set_common_options(table, field_id):
     # Move label into toolbar area, to make it look as a part of the table.
     table.set(toolbar='label[for={0}]'.format(field_id))
 
-    for header in metadata.headers:
-        table.columns.add(field=header,
-                          visible=bool(header in visible_on_start),
-                          title=forms.pretty_name(header),
-                          align='left',
-                          sortable=True,
-                          halign='left',
-                          valign='middle')
+    add_metadata_headers(table, metadata)
 
 
 class SelectSampleForm(forms.Form):

@@ -21,6 +21,12 @@
       Your job is {{ state }}
   </div>
   <pre id="errors" style="display: none"></pre>
+  <div>
+      <div id="meta_table_header">
+          Analysis type: {{ type_of_analysis|capfirst }}
+      </div>
+      {{ data_table }}
+  </div>
   <script type="text/javascript">
     var url = "/biogaz/get_status/{{ path }}/{{ type_of_analysis }}";
 

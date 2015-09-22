@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ type_of_analysis|capfirst }} results - {% endblock %}
+
+{% block header %}
+    <style type="text/css">
+      html, body, .container, #main-content
+      {
+          height: 100%;
+      }
+      .present {
+          display: block!important;
+          margin-bottom: 15px
+      }
+      #switchers
+      {
+          margin-bottom: 20px;
+      }
+      #krona_iframe
+      {
+          display: block;
+          clear: both;
+          width: 100%;
+          height: 80%;
+          border: 1px solid #ccc;
+      }
+    </style>
+{% endblock %}
+
+{% block content %}
+  <h1>{{ type_of_analysis|capfirst }} results</h1>
+  <div id="switchers" class="btn-group" role="group">
+    <button type="button"
+            class="btn btn-default"
+            onclick="$('#libs').toggleClass('present');$(this).toggleClass('active')">
+        Show analysis details
+    </button>
+    <a role="button"
+            class="btn btn-default"
+            href="/biogaz/result_html/{{ path }}/{{ type_of_analysis }}/{{ krona_path }}">
+        Open krona without this frame
+    </a>
+  </div>
+  <div id="libs" style="display: none">
+      <div id="meta_table_header">
+          <b>Analysis type:</b> {{ type_of_analysis|capfirst }}
+      </div>
+      {{ data_table }}
+  </div>
+  <iframe id="krona_iframe" src="/biogaz/result_html/{{ path }}/{{ type_of_analysis }}/{{ krona_path }}">
+  </iframe>
+{% endblock %}

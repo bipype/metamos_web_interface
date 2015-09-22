@@ -1,3 +1,4 @@
+import os
 import sys
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,7 +10,7 @@ sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interfac
 from metadata import MetadataManager
 import job_manager
 import forms
-import helpers
+import results
 from paths import app_paths, encode, decode
 
 
@@ -42,7 +43,7 @@ def new(request):
 
     else:
 
-        messages = helpers.errors_to_messages(form.errors)
+        messages = forms.errors_to_messages(form.errors)
 
         data = {'messages': messages,
                 'form': form}
@@ -73,7 +74,7 @@ def new_meta(request):
 
     else:
 
-        messages = helpers.errors_to_messages(form.errors)
+        messages = forms.errors_to_messages(form.errors)
 
         data = {'messages': messages,
                 'form': form}
@@ -99,7 +100,7 @@ def remove(request):
 
         for library_id in selected:
 
-            success = helpers.remove_results_by_library_id(library_id)
+            success = results.remove_by_library_id(library_id)
 
             library = metadata.explain_row(metadata.get_row(library_id))
 
@@ -127,7 +128,7 @@ def remove(request):
                     'type': 'danger'
                 })
     else:
-        messages += helpers.errors_to_messages(form.errors)
+        messages += forms.errors_to_messages(form.errors)
 
     data = {'messages': messages,
             'form': form}
@@ -155,7 +156,7 @@ def result_redirect(model, data):
 def get_status(request, path, type_of_analysis):
     import json
     path = decode(path)
-    results_object = helpers.get_results_object(type=type_of_analysis, path=path)
+    results_object = results.get_object(type=type_of_analysis, path=path)
     to_json = {'progress': job_manager.get_progress(results_object.job),
                'state': job_manager.get_job_state(results_object.job),
                'error': results_object.job.error}
@@ -169,16 +170,14 @@ def show_html(file_path):
 
 
 def result_html(request, path, type_of_analysis, file_path):
-    import os
-    results_object = helpers.get_results_object(type=type_of_analysis, path=path)
+    results_object = results.get_object(type=type_of_analysis, path=path)
     absolute_path = os.path.join(results_object.output_dir, file_path)
     return show_html(absolute_path)
 
 
 def result_download(request, path, type_of_analysis, file_path):
     import mimetypes
-    import os
-    results_object = helpers.get_results_object(type=type_of_analysis, path=path)
+    results_object = results.get_object(type=type_of_analysis, path=path)
     absolute_path = os.path.join(results_object.output_dir, file_path)
     mime = mimetypes.guess_type(absolute_path)
     fsock = open(absolute_path, 'r')
@@ -196,48 +195,40 @@ def result(request, path, type_of_analysis):
     path = decode(path)
 
     try:
-        results_object = helpers.get_results_object(type=type_of_analysis,
-                                                    path=path)
+        results_object = results.get_object(type=type_of_analysis, path=path)
     except ObjectDoesNotExist:
         # this case is possible if someone has deleted results related to given
         # sample, whereas another one tried then to refresh this view.
         # for this case, redirect to home
         return HttpResponseRedirect('/biogaz/')
 
+    data_table = results.create_meta_table(results_object)
+
     state = job_manager.get_job_state(results_object.job)
 
     if state == 'done':
 
+        data = {
+            'type_of_analysis': type_of_analysis,
+            'data_table': data_table.render('', ''),
+            'path': path
+        }
+
         if results_object.type == 'metatranscriptomics':
-            from django.forms.forms import pretty_name
-            import os
-            file_list = []
-            parent_dir = results_object.output_dir
-            for root, dirs, files in os.walk(parent_dir):
-                
-                for name in files:
-                    if name == 'meta.config':
-                        continue
-                    current_path = os.path.join(root.replace(parent_dir, ''), name)
-                    if current_path.endswith('.html'):
-                        mode = 'html'
-                        icon = 'file'
-                    else:
-                        mode = 'download'
-                        icon = 'download-alt'
-                    current_file = {
-                        'mode': mode,
-                        'path': current_path,
-                        'icon': icon,
-                        'name': pretty_name(os.path.splitext(name)[0])
-                        }
-                    file_list.append(current_file)
-            data = {
-                'path': path,
-                'files': file_list}
+
+            file_list = results.get_list(results_object, skip=['meta.config'])
+            config = results.get_without_paths(results_object, 'meta.config')
+
+            data['files'] = file_list
+            data['config'] = config
+            data['reference_condition'] = results_object.reference_condition
+
             return render(request, 'results_meta.html', data)
         else:
-            return show_html(results_object.html_path)
+
+            data['krona_path'] = os.path.basename(results_object.html_path)
+
+            return render(request, 'results_krona.html', data)
 
     else:
 
@@ -259,6 +250,7 @@ def result(request, path, type_of_analysis):
         data = {'path': encode(path),
                 'type_of_analysis': type_of_analysis,
                 'progress': progress,
+                'data_table': data_table.render('', ''),
                 'state': state}
 
         return wait(request, data)
