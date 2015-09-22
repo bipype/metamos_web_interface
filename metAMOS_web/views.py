@@ -1,12 +1,7 @@
 import os
-import sys
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
-
 from metadata import MetadataManager
 import job_manager
 import forms

@@ -3,11 +3,6 @@ import os
 from django.db import models
 from paths import app_paths
 
-import sys
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
-
 
 # TODO: move to other file (model_fields.py??), add import
 class JSONField(models.TextField):

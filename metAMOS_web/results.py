@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 import os
-
-from metAMOS_web.models import Results
+import shutil
+from django.forms.forms import pretty_name
+from models import Results
 from metadata import MetadataManager
 from bootstrap_tables.widgets import BootstrapTableWidget
 from forms import add_metadata_headers
-from django.forms.forms import pretty_name
-
 import job_manager
-import shutil
 
 
 def get_without_paths(results_object, filename):

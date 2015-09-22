@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 import os
+import re
 import sys
+import gzip
+import shutil
 import subprocess
+from glob import glob
 from time import sleep
 from paths import app_paths
 
@@ -15,11 +19,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'metAMOS_web_interface.settings'
 from django.core.management import setup_environ
 import metAMOS_web_interface.settings as settings
 setup_environ(settings)
-import shutil
-from glob import glob
-import gzip
 from job_manager import JobManager
-import re
 from metadata import MetadataManager
 
 SUBPROCESS_ENV = os.environ.copy()
