@@ -8,10 +8,32 @@ from bootstrap_tables.widgets import BootstrapTableSelectMultiple
 from bootstrap_tables.fields import BootstrapTableChoiceField
 from bootstrap_tables.fields import BootstrapTableMultipleChoiceField
 from metadata import MetadataManager
-import sys
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface')
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web')
-sys.path.append('/home/pszczesny/soft/metAMOS_web_interface/metAMOS_web_interface')
+
+
+visible_on_start = ['library_name', 'library_comments', 'library_type', 'type']
+
+metadata = MetadataManager()
+metadata.from_file()
+
+
+def pretty_analysis_name(type_of_analysis):
+
+    mappings = {
+        'amplicons_its': 'Amplicons ITS',
+        'amplicons_16s': 'Amplicons 16S'
+    }
+
+    if type_of_analysis in mappings:
+        return mappings[type_of_analysis]
+    else:
+        return type_of_analysis.replace('_', ' ').title()
+
+
+def get_pretty_types_of_analyses():
+    analyses = []
+    for analysis in get_types_of_analyses():
+        analyses.append(pretty_analysis_name(analysis))
+    return analyses
 
 
 def get_types_of_analyses():
@@ -24,12 +46,6 @@ def get_types_of_analyses():
         if match:
             analyses.append(match.group(1))
     return analyses
-
-visible_on_start = ['library_name', 'library_comments', 'library_type', 'type']
-bipype_variant_list = get_types_of_analyses()
-
-metadata = MetadataManager()
-metadata.from_file()
 
 
 def errors_to_messages(errors):
@@ -123,15 +139,12 @@ class SelectSampleForm(forms.Form):
     """
     Create form allowing to choose our sample and type of analysis. Fields of
     this form are created outside __init__, so they aren't dynamically generated
-
-    This form (if used in <form> with 'get' method) will generate response like:
-    ?selected_bipype_variant=A&selected_sample=B, where:
-        A belongs to bipype_variant_list,
-        B belongs to sample_list
     """
+    choices = zip(get_types_of_analyses(), get_pretty_types_of_analyses())
+
     type_of_analysis = field_with_bootstrap_class(
         ChoiceField,
-        choices=zip(bipype_variant_list, bipype_variant_list))
+        choices=sorted(choices))
 
     table = BootstrapTableSelect(metadata.id_column)
 

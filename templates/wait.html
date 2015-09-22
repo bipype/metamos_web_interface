@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Running {{ analysis_name|capfirst }} - {% endblock %}
+{% block title %}Running {{ analysis_name }} - {% endblock %}
 
 {% block content %}
   {% include "messages.html" with messages=messages %}
   <h1>Calculating, please wait.</h1>
-  <p>This page will refresh itself automatically. You can save url of this page,
-  and check results later using the same address.</p>
+  <p>This page will refresh itself automatically. You can save the url of this
+    page, and check results later using the same address.</p>
   <div class="progress">
     <div class="progress-bar progress-bar-striped active"
          id="progressbar"
@@ -23,7 +23,7 @@
   <pre id="errors" style="display: none"></pre>
   <div>
       <div id="meta_table_header">
-          <b>Analysis type:</b> {{ analysis_name|capfirst }}
+          <b>Analysis type:</b> {{ analysis_name }}
       </div>
       {{ data_table }}
   </div>

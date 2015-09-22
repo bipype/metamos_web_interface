@@ -207,7 +207,7 @@ def result(request, path, type_of_analysis):
 
     data = {
         'type_of_analysis': type_of_analysis,
-        'analysis_name': results.pretty_analysis_name(type_of_analysis),
+        'analysis_name': forms.pretty_analysis_name(type_of_analysis),
         'data_table': data_table.render('', ''),
         'path': path
     }
