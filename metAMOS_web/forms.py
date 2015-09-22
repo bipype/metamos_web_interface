@@ -25,7 +25,7 @@ def get_types_of_analyses():
             analyses.append(match.group(1))
     return analyses
 
-visible_on_start = ['library_name', 'library_comments', 'localization', 'type']
+visible_on_start = ['library_name', 'library_comments', 'library_type', 'type']
 bipype_variant_list = get_types_of_analyses()
 
 metadata = MetadataManager()

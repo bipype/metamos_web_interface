@@ -55,6 +55,7 @@ def get_list(results_object, skip=None):
 
 
 def create_meta_table(results_object):
+
     results_metadata = MetadataManager()
     results_metadata.from_dict(results_object.libraries)
     data_table = BootstrapTableWidget('')
@@ -62,9 +63,21 @@ def create_meta_table(results_object):
     # since it easier to create table from Widget, than from scratch)
     data_table.columns.add(field='empty', visible=False, switchable=False)
     add_metadata_headers(data_table, results_metadata)
+    if results_object.type == 'metatranscriptomics':
+        data_table.columns.add(field='condition', title='Condition',
+                               align='left', sortable=True,
+                               halign='left', valign='middle')
+        rows = []
+        for row in results_metadata.rows:
+            library_id = row[results_metadata.id_index]
+            condition = results_object.conditions[library_id]
+            row.append(condition)
+            rows.append(row)
+    else:
+        rows = results_metadata.rows
     data_table.set(showColumns=True)
     data_table.set(toolbar='#meta_table_header')
-    data_table.choices = results_metadata.rows
+    data_table.choices = rows
     return data_table
 
 

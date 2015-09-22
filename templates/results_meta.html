@@ -11,6 +11,11 @@
       {
           margin-bottom: 20px;
       }
+      #libs
+      {
+          position: relative;
+          top: -20px;
+      }
     </style>
 {% endblock %}
 
@@ -25,14 +30,14 @@
     <button type="button"
             class="btn btn-default"
             onclick="$('#config').toggleClass('present');$(this).toggleClass('active')">
-        Show configuration details
+        Show configuration summary
     </button>
   </div>
   <div id="libs" style="display: none">
       <div id="meta_table_header">
           <b>Reference_condition:</b> {{ reference_condition }}
       </div>
-    {{ data_table.render }}
+    {{ data_table }}
   </div>
   <div id="config" style="display: none">
       <pre>{{ config }}</pre>

@@ -289,7 +289,6 @@ def run_metatranscriptomics(job, results_object):
 
             library = metadata.explain_row(library_row)
 
-            # the same as: = library[metadata.column_index('library_id')]
             library_id = library['library_id']
             condition = results_object.conditions[library_id]
 
