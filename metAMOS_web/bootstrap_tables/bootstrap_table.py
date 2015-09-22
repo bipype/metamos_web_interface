@@ -417,7 +417,10 @@ class BootstrapTable(Object):
             if is_container(item):
                 for column in self.columns.all():
                     field = column.all()['field']
-                    content = unicode(item.all().get(field, u''))
+                    raw_content = item.all().get(field, u'-')
+                    if raw_content == 'None':
+                        raw_content = u'-'
+                    content = unicode(raw_content)
 
                     out += spacer + self.indent
                     out += self.create_tag(u'td', {}, content)
