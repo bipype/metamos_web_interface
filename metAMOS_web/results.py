@@ -11,6 +11,16 @@ import job_manager
 import shutil
 
 
+ANALYSES = {
+    'amplicons_its': 'Amplicons ITS',
+    'amplicons_16s': 'Amplicons 16S'
+}
+
+
+def pretty_analysis_name(type_of_analysis):
+    return ANALYSES.get(type_of_analysis, type_of_analysis)
+
+
 def get_without_paths(results_object, filename):
 
     path = os.path.join(results_object.input_dir, filename)

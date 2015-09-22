@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Running - {% endblock %}
+{% block title %}Running {{ analysis_name|capfirst }} - {% endblock %}
 
 {% block content %}
   {% include "messages.html" with messages=messages %}
@@ -23,7 +23,7 @@
   <pre id="errors" style="display: none"></pre>
   <div>
       <div id="meta_table_header">
-          <b>Analysis type:</b> {{ type_of_analysis|capfirst }}
+          <b>Analysis type:</b> {{ analysis_name|capfirst }}
       </div>
       {{ data_table }}
   </div>

@@ -13,7 +13,6 @@ import forms
 import results
 from paths import app_paths, encode, decode
 
-
 # init once, since we will need to use it twice
 metadata = MetadataManager()
 metadata.from_file()
@@ -206,13 +205,14 @@ def result(request, path, type_of_analysis):
 
     state = job_manager.get_job_state(results_object.job)
 
-    if state == 'done':
+    data = {
+        'type_of_analysis': type_of_analysis,
+        'analysis_name': results.pretty_analysis_name(type_of_analysis),
+        'data_table': data_table.render('', ''),
+        'path': path
+    }
 
-        data = {
-            'type_of_analysis': type_of_analysis,
-            'data_table': data_table.render('', ''),
-            'path': path
-        }
+    if state == 'done':
 
         if results_object.type == 'metatranscriptomics':
 
@@ -247,10 +247,7 @@ def result(request, path, type_of_analysis):
 
         progress = job_manager.get_progress(results_object.job)
 
-        data = {'path': encode(path),
-                'type_of_analysis': type_of_analysis,
-                'progress': progress,
-                'data_table': data_table.render('', ''),
-                'state': state}
+        data['progress'] = progress
+        data['state'] = state
 
         return wait(request, data)

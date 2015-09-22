@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ type_of_analysis|capfirst }} results - {% endblock %}
+{% block title %}{{ analysis_name|capfirst }} results - {% endblock %}
 
 {% block header %}
     <style type="text/css">
@@ -47,7 +47,7 @@
   </div>
   <div id="libs" style="display: none">
       <div id="meta_table_header">
-          <b>Analysis type:</b> {{ type_of_analysis|capfirst }}
+          <b>Analysis type:</b> {{ analysis_name|capfirst }}
       </div>
       {{ data_table }}
   </div>
