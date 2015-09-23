@@ -75,9 +75,8 @@ def run_command(commands, job):
     err_log.close()
 
     if return_code is None:
-        raise CommandExecutionError(
-            'No return code for {0}. It might indicates unfinished '
-            'execution, and broken standard output pipe'.format(base))
+        print 'No return code for {0}. It might indicates unfinished ' \
+            'execution, and broken standard output pipe'.format(base)
     elif return_code == 0:
         print '{0} finished with {1} return code'.format(base, return_code)
     else:
@@ -243,7 +242,7 @@ def run_metamos(job, results_object):
 
     run_command(commands, job)
 
-    update_progress(job, 30)
+    update_progress(job, 20)
 
     skip = 'FindORFS,MapReads,Validate,Abundance,Annotate,Scaffold,Propagate,Classify'
 
