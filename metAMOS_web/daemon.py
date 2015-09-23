@@ -32,6 +32,10 @@ def update_progress(job, value):
     job.save()
 
 
+class CommandExecutionError(Exception):
+    pass
+
+
 def run_command(commands, job):
 
     base = os.path.basename(commands[0])
@@ -71,19 +75,20 @@ def run_command(commands, job):
     err_log.close()
 
     if return_code is None:
-        print 'No return code for {0}. It might indicates unfinished ' \
-              'execution, and broken standard output pipe'.format(base)
+        raise CommandExecutionError(
+            'No return code for {0}. It might indicates unfinished '
+            'execution, and broken standard output pipe'.format(base))
     elif return_code == 0:
         print '{0} finished with {1} return code'.format(base, return_code)
     else:
-        print ('{0} finished with {1} return code;\n'
-               'It probably indicates some errors.\n'
-               'For more information, check following files:\n'
-               '{2}\n{3}'.format(
-                    base, return_code,
-                    tmp_base_path + '.err',
-                    tmp_base_path + '.out')
-               )
+        raise CommandExecutionError(
+            '{0} finished with {1} return code;\n'
+            'It indicates some errors.\n'
+            'For more information, check following files:\n'
+            '{2}\n{3}'.format(
+                base, return_code,
+                tmp_base_path + '.err',
+                tmp_base_path + '.out'))
 
     return return_code
 
