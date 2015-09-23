@@ -4,7 +4,6 @@ from django.db import models
 from paths import app_paths
 
 
-# TODO: move to other file (model_fields.py??), add import
 class JSONField(models.TextField):
     __metaclass__ = models.SubfieldBase
 

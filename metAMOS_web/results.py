@@ -139,7 +139,7 @@ def get_or_create(model, data):
         lookup_data = copy.copy(data)
 
         # Warning: assuming, that all lists go to JSON fields to simplify a lot
-        for field_id, value in lookup_data:
+        for field_id, value in lookup_data.iteritems():
             if type(value) is list:
                 lookup_data[field_id] = json.dumps(value)
 
