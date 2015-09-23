@@ -221,7 +221,12 @@ def result(request, path, type_of_analysis):
             return render(request, 'results_meta.html', data)
         else:
 
+            results_metadata = MetadataManager()
+            results_metadata.from_dict(results_object.libraries)
+
             data['krona_path'] = os.path.basename(results_object.html_path)
+            data['library_name'] = results_metadata.get_column('library_name')[0]
+            data['library_id'] = results_metadata.get_column('library_id')[0]
 
             return render(request, 'results_krona.html', data)
 

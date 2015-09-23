@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ analysis_name }} results - {% endblock %}
+{% block title %}{{ library_name }} - {{ analysis_name }} results - {% endblock %}
 
 {% block header %}
     <style type="text/css">
@@ -32,7 +32,10 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{{ analysis_name }} results</h1>
+  <h1>
+      {{ analysis_name }} results
+      <small>{{ library_name }}, ID: {{ library_id }}</small>
+  </h1>
   <div id="switchers" class="btn-group" role="group">
     <button type="button"
             class="btn btn-default"
