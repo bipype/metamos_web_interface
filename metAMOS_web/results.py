@@ -129,8 +129,6 @@ def get_or_create(model, data):
     import copy
     import json
 
-    data['libraries'] = metadata.get_subset(data['library_ids'])
-
     try:
         # for lookups, we need to dump values in JSON fields;
 
@@ -138,15 +136,17 @@ def get_or_create(model, data):
         # will be passed to creator in case of our fail.
         lookup_data = copy.copy(data)
 
-        # Warning: assuming, that all lists go to JSON fields to simplify a lot
+        # Warning: assuming, that lists and dicts will always go to JSON fields
         for field_id, value in lookup_data.iteritems():
-            if type(value) is list:
+            if type(value) in [list, dict]:
                 lookup_data[field_id] = json.dumps(value)
 
         results_object = model.objects.get(**lookup_data)
 
-    except ObjectDoesNotExist:
+        # TODO: check whether libraries information changed, show warning if so
 
+    except ObjectDoesNotExist:
+        data['libraries'] = metadata.get_subset(data['library_ids'])
         data['path'] = app_paths.unique_path_for(data['type'])
         results_object = model.objects.create(**data)
 
