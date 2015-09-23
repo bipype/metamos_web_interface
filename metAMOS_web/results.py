@@ -2,11 +2,17 @@
 import os
 import shutil
 from django.forms.forms import pretty_name
+from django.core.exceptions import ObjectDoesNotExist
 from models import Results
 from metadata import MetadataManager
 from bootstrap_tables.widgets import BootstrapTableWidget
 from forms import add_metadata_headers
 import job_manager
+from paths import app_paths
+
+
+metadata = MetadataManager()
+metadata.from_file()
 
 
 def get_without_paths(results_object, filename):
@@ -116,3 +122,32 @@ def remove_by_library_id(library_id):
 def get_object(**results_data):
     results_object = Results.objects.get(**results_data)
     return results_object.cast()
+
+
+def get_or_create(model, data):
+
+    import copy
+    import json
+
+    data['libraries'] = metadata.get_subset(data['library_ids'])
+
+    try:
+        # for lookups, we need to dump values in JSON fields;
+
+        # we don't want to do this on the same copy which
+        # will be passed to creator in case of our fail.
+        lookup_data = copy.copy(data)
+
+        # Warning: assuming, that all lists go to JSON fields to simplify a lot
+        for field_id, value in lookup_data:
+            if type(value) is list:
+                lookup_data[field_id] = json.dumps(value)
+
+        results_object = model.objects.get(**lookup_data)
+
+    except ObjectDoesNotExist:
+
+        data['path'] = app_paths.unique_path_for(data['type'])
+        results_object = model.objects.create(**data)
+
+    return results_object

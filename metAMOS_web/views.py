@@ -6,11 +6,7 @@ from metadata import MetadataManager
 import job_manager
 import forms
 import results
-from paths import app_paths, encode, decode
-
-# init once, since we will need to use it twice
-metadata = MetadataManager()
-metadata.from_file()
+from paths import encode, decode
 
 
 def index(request):
@@ -33,7 +29,8 @@ def new(request):
             'library_ids': [library_id]
         }
 
-        return result_redirect(SampleResults, data)
+        results_object = results.get_or_create(SampleResults, data)
+        return result_redirect(results_object)
 
     else:
 
@@ -64,7 +61,8 @@ def new_meta(request):
                 'conditions': conditions,
                 'reference_condition': form.cleaned_data['reference_condition']}
 
-        return result_redirect(MetaResults, data)
+        results_object = results.get_or_create(MetaResults, data)
+        return result_redirect(results_object)
 
     else:
 
@@ -91,6 +89,9 @@ def remove(request):
                 'contents': 'Your have to select at least one sample',
                 'type': 'info'
             })
+
+        metadata = MetadataManager()
+        metadata.from_file()
 
         for library_id in selected:
 
@@ -130,15 +131,7 @@ def remove(request):
     return render(request, 'remove.html', data)
 
 
-def result_redirect(model, data):
-
-    data['libraries'] = metadata.get_subset(data['library_ids'])
-
-    try:
-        results_object = model.objects.get(**data)
-    except ObjectDoesNotExist:
-        data['path'] = app_paths.unique_path_for(data['type'])
-        results_object = model.objects.create(**data)
+def result_redirect(results_object):
 
     destination = '/biogaz/result/{path}/{type}'.format(
         path=encode(results_object.path),
