@@ -28,10 +28,8 @@ class Job(models.Model):
 
 
 class Results(models.Model):
-    """
-
-    """
-    # TODO: this should be renamed to dir_name
+    # 'path' usually will be a name of directory, where results will be kept,
+    # and simultaneously a part of URL which identifies particular results.
     path = models.CharField(max_length=256, primary_key=True)
     type = models.CharField(max_length=256)
     job = models.OneToOneField(Job, null=True)

@@ -117,7 +117,11 @@ def remove_by_library_id(library_id):
             # uncasted instance of an object
             results_object.delete()
         return True
-    except:                                          # TODO: specific exceptions
+    # Since django in 1.4 does not raise any specific exceptions for deletion,
+    # we catch everything which inherits from Exception.
+    # Exception information will be flushed to standard output.
+    except Exception as exception:
+        print exception
         return False
 
 
