@@ -12,8 +12,7 @@ from metadata import MetadataManager
 
 visible_on_start = ['library_name', 'library_comments', 'library_type', 'type']
 
-metadata = MetadataManager()
-metadata.from_file()
+metadata = MetadataManager.from_file()
 
 
 def pretty_analysis_name(type_of_analysis):

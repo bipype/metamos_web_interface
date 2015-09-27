@@ -22,31 +22,31 @@ class MetadataManager(object):
 
     ID_COLUMN = 'library_id'
 
-    def __init__(self, id_column=ID_COLUMN):
+    def __init__(self, rows=None, headers=None, id_column=ID_COLUMN):
         self.id_column = id_column
         self.id_index = None
-        self.headers = []
-        self.rows = []
+        self.headers = headers
+        self.rows = rows
+        self.update_id_index()
 
-    def from_file(self, path=app_paths.metadata):
+    @classmethod
+    def from_file(cls, path=app_paths.metadata):
 
-        self.headers = []
-        self.rows = []
+        headers = []
+        rows = []
 
         workbook = load_workbook(filename=path, read_only=True)
 
         for sheet in workbook:
             sheet_rows = sheet.rows
-            self.headers += [unicode(h.value) for h in next(sheet_rows)]
-            self.rows += [[unicode(cell.value) for cell in row] for row in sheet_rows]
+            headers += [unicode(h.value) for h in next(sheet_rows)]
+            rows += [[unicode(cell.value) for cell in r] for r in sheet_rows]
 
-        self.update_id_index()
+        return cls(rows, headers)
 
-    def from_dict(self, dictionary):
-        self.headers = dictionary['headers']
-        self.rows = dictionary['rows']
-
-        self.update_id_index()
+    @classmethod
+    def from_dict(cls, dictionary):
+        return cls(**dictionary)
 
     def update_id_index(self):
         # raises ValueError if self.ID_COLUMN is not in header
@@ -78,8 +78,8 @@ class MetadataManager(object):
 
     def get_subset(self, id_list):
 
-        return {'headers': self.headers,
-                'rows': self.get_rows(id_list)}
+        return {u'headers': self.headers,
+                u'rows': self.get_rows(id_list)}
 
     def explain_row(self, row):
         columns = zip(self.headers, row)

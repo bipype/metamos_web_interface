@@ -13,8 +13,7 @@ import job_manager
 from paths import app_paths
 
 
-metadata = MetadataManager()
-metadata.from_file()
+metadata = MetadataManager.from_file()
 
 
 def get_without_paths(results_object, filename):
@@ -64,8 +63,7 @@ def create_meta_table(results_object):
 
     libraries = copy.deepcopy(results_object.libraries)
 
-    results_metadata = MetadataManager()
-    results_metadata.from_dict(libraries)
+    results_metadata = MetadataManager.from_dict(libraries)
     data_table = BootstrapTableWidget('')
     # column in place of widget's checkbox or radio (we are using it here,
     # since it easier to create table from Widget, than from scratch)
@@ -164,10 +162,8 @@ def get_libraries_warnings(results_object):
     # if libraries are not up to date
     if not results_object.libraries == libraries:
 
-        new_data = MetadataManager()
-        new_data.from_dict(libraries)
-        old_data = MetadataManager()
-        old_data.from_dict(results_object.libraries)
+        new_data = MetadataManager.from_dict(libraries)
+        old_data = MetadataManager.from_dict(results_object.libraries)
 
         changed_libraries = []
 

@@ -91,8 +91,7 @@ def remove(request):
                 'type': 'info'
             })
 
-        metadata = MetadataManager()
-        metadata.from_file()
+        metadata = MetadataManager.from_file()
 
         for library_id in selected:
 
@@ -223,8 +222,7 @@ def result(request, path, type_of_analysis):
             return render(request, 'results_meta.html', data)
         else:
 
-            results_metadata = MetadataManager()
-            results_metadata.from_dict(results_object.libraries)
+            results_metadata = MetadataManager.from_dict(results_object.libraries)
 
             data['krona_path'] = os.path.basename(results_object.html_path)
             data['library_name'] = results_metadata.get_column('library_name')[0]

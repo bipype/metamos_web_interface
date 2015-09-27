@@ -168,8 +168,7 @@ def prepare_results_dirs(results_object):
 
 
 def prepare_metadata(results_object):
-    metadata = MetadataManager()
-    metadata.from_dict(results_object.libraries)
+    metadata = MetadataManager.from_dict(results_object.libraries)
     metadata.discover_paths()
     return metadata
 
