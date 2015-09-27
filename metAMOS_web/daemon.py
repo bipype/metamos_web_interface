@@ -8,19 +8,19 @@ import subprocess
 from glob import glob
 from time import sleep
 from paths import app_paths
+from metadata import MetadataManager
 
 CWD = os.getcwd()
-DIRNAME = os.path.dirname(CWD)
-sys.path.append(DIRNAME)
+DIR_NAME = os.path.dirname(CWD)
+sys.path.append(DIR_NAME)
 sys.path.append(CWD)
-sys.path.append(os.path.join(DIRNAME, 'metAMOS_web_interface'))
+sys.path.append(os.path.join(DIR_NAME, 'metAMOS_web_interface'))
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'metAMOS_web_interface.settings'
 from django.core.management import setup_environ
 import metAMOS_web_interface.settings as settings
 setup_environ(settings)
 from job_manager import JobManager
-from metadata import MetadataManager
 
 SUBPROCESS_ENV = os.environ.copy()
 SUBPROCESS_ENV['SHELL'] = '/bin/bash'
@@ -176,7 +176,8 @@ def prepare_metadata(results_object):
 def run_metamos(job, results_object):
     """
     Args:
-        results_object - an instance of SampleResults object
+        job - an instance of Job model
+        results_object - an instance of SampleResults model
     """
     prepare_results_dirs(results_object)
     metadata = prepare_metadata(results_object)
@@ -243,7 +244,8 @@ def run_metamos(job, results_object):
 
     update_progress(job, 20)
 
-    skip = 'FindORFS,MapReads,Validate,Abundance,Annotate,Scaffold,Propagate,Classify'
+    skip = 'FindORFS,MapReads,Validate,Abundance,' \
+           'Annotate,Scaffold,Propagate,Classify'
 
     commands = [
         os.path.join(app_paths.metAMOS, 'runPipeline'),
@@ -275,7 +277,8 @@ def run_metamos(job, results_object):
 def run_metatranscriptomics(job, results_object):
     """
     Args:
-        results_object - an instance of MetaResults object
+        job - an instance of Job model
+        results_object - an instance of MetaResults model
     """
     prepare_results_dirs(results_object)
     metadata = prepare_metadata(results_object)
@@ -348,5 +351,6 @@ if __name__ == '__main__':
         if performed:
             sleep(1)
         else:
-            # let's be more friendly for server if the queue was empty last time
+            # let's be more friendly for server,
+            #  if the queue was empty last time.
             sleep(5)

@@ -177,6 +177,32 @@ def wait(request, data):
     return render(request, 'wait.html', data)
 
 
+def result_metatranscriptomics(request, results_object, data):
+
+    file_list = results.get_list(
+        results_object,
+        skip=['meta.config', '.meta_tmp_results']
+    )
+    config = results.get_without_paths(results_object, 'meta.config')
+
+    data['files'] = file_list
+    data['config'] = config
+    data['reference_condition'] = results_object.reference_condition
+
+    return render(request, 'results_meta.html', data)
+
+
+def result_bipype(request, results_object, data):
+
+    results_metadata = MetadataManager.from_dict(results_object.libraries)
+
+    data['krona_path'] = os.path.basename(results_object.html_path)
+    data['library_name'] = results_metadata.get_column('library_name')[0]
+    data['library_id'] = results_metadata.get_column('library_id')[0]
+
+    return render(request, 'results_krona.html', data)
+
+
 def result(request, path, type_of_analysis):
 
     path = decode(path)
@@ -211,27 +237,9 @@ def result(request, path, type_of_analysis):
     if state == 'done':
 
         if results_object.type == 'metatranscriptomics':
-
-            file_list = results.get_list(
-                results_object,
-                skip=['meta.config', '.meta_tmp_results']
-            )
-            config = results.get_without_paths(results_object, 'meta.config')
-
-            data['files'] = file_list
-            data['config'] = config
-            data['reference_condition'] = results_object.reference_condition
-
-            return render(request, 'results_meta.html', data)
+            return result_metatranscriptomics(request, results_object, data)
         else:
-
-            results_metadata = MetadataManager.from_dict(results_object.libraries)
-
-            data['krona_path'] = os.path.basename(results_object.html_path)
-            data['library_name'] = results_metadata.get_column('library_name')[0]
-            data['library_id'] = results_metadata.get_column('library_id')[0]
-
-            return render(request, 'results_krona.html', data)
+            return result_bipype(request, results_object, data)
 
     else:
 
