@@ -78,6 +78,7 @@
 
     <div class="container">
       <div id="main-content">
+        {% include "messages.html" with messages=messages %}
         {% block content %}
         {% endblock %}
       </div>
