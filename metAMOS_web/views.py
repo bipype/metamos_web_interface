@@ -212,7 +212,10 @@ def result(request, path, type_of_analysis):
 
         if results_object.type == 'metatranscriptomics':
 
-            file_list = results.get_list(results_object, skip=['meta.config'])
+            file_list = results.get_list(
+                results_object,
+                skip=['meta.config', '.meta_tmp_results']
+            )
             config = results.get_without_paths(results_object, 'meta.config')
 
             data['files'] = file_list
