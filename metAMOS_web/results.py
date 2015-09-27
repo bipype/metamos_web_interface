@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 import shutil
+import copy
+import json
 from django.forms.forms import pretty_name
 from django.core.exceptions import ObjectDoesNotExist
 from models import Results
@@ -60,8 +62,10 @@ def get_list(results_object, skip=None):
 
 def create_meta_table(results_object):
 
+    libraries = copy.deepcopy(results_object.libraries)
+
     results_metadata = MetadataManager()
-    results_metadata.from_dict(results_object.libraries)
+    results_metadata.from_dict(libraries)
     data_table = BootstrapTableWidget('')
     # column in place of widget's checkbox or radio (we are using it here,
     # since it easier to create table from Widget, than from scratch)
@@ -126,9 +130,6 @@ def get_object(**results_data):
 
 def get_or_create(model, data):
 
-    import copy
-    import json
-
     try:
         # for lookups, we need to dump values in JSON fields;
 
@@ -143,11 +144,51 @@ def get_or_create(model, data):
 
         results_object = model.objects.get(**lookup_data)
 
-        # TODO: check whether libraries information changed, show warning if so
-
     except ObjectDoesNotExist:
         data['libraries'] = metadata.get_subset(data['library_ids'])
         data['path'] = app_paths.unique_path_for(data['type'])
         results_object = model.objects.create(**data)
 
     return results_object
+
+
+def get_libraries_warnings(results_object):
+    """
+    Check whether libraries information are up-to date with currently loaded
+    version of metadata worksheet; return appropriate message if they aren't.
+    """
+    messages = []
+
+    libraries = metadata.get_subset(results_object.library_ids)
+
+    # if libraries are not up to date
+    if not results_object.libraries == libraries:
+
+        new_data = MetadataManager()
+        new_data.from_dict(libraries)
+        old_data = MetadataManager()
+        old_data.from_dict(results_object.libraries)
+
+        changed_libraries = []
+
+        for library_id in results_object.library_ids:
+            if new_data.get_row(library_id) != old_data.get_row(library_id):
+                changed_libraries.append(library_id)
+
+        subject = 'libraries' if len(changed_libraries) > 1 else 'library'
+
+        messages.append({
+            'title': 'Metadata has changed!',
+            'contents': 'Information about {0} of id: {1} used for this job '
+                        'differ from these, which are in metadata file. '
+                        'To recalculate these results with newer data, remove '
+                        'them and then, start the job again. Metadata shown '
+                        'below are these, which were used for this job, '
+                        'not the one from current metadata file'.format(
+                            subject,
+                            ','.join(changed_libraries)
+                        ),
+            'type': 'warning'
+        })
+
+    return messages

@@ -62,6 +62,7 @@ def new_meta(request):
                 'reference_condition': form.cleaned_data['reference_condition']}
 
         results_object = results.get_or_create(MetaResults, data)
+
         return result_redirect(results_object)
 
     else:
@@ -189,16 +190,24 @@ def result(request, path, type_of_analysis):
         # for this case, redirect to home
         return HttpResponseRedirect('/biogaz/')
 
-    data_table = results.create_meta_table(results_object)
+    messages = []
 
-    state = job_manager.get_job_state(results_object.job)
+    # generally, checks whether library information is up-to-data
+    libraries_warnings = results.get_libraries_warnings(results_object)
+    if libraries_warnings:
+        messages += libraries_warnings
+
+    data_table = results.create_meta_table(results_object)
 
     data = {
         'type_of_analysis': type_of_analysis,
         'analysis_name': forms.pretty_analysis_name(type_of_analysis),
         'data_table': data_table.render('', ''),
-        'path': path
+        'path': path,
+        'messages': messages
     }
+
+    state = job_manager.get_job_state(results_object.job)
 
     if state == 'done':
 
