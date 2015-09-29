@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{% if library_name %}{{ library_name }} - {%endif}{{ analysis_name }} results - {% endblock %}
+
+{% block header %}
+    <style type="text/css">
+      {% if krona_path %}
+      html, body, .container, #main-content
+      {
+          height: 100%;
+      }
+      #krona_iframe
+      {
+          display: block;
+          clear: both;
+          width: 100%;
+          height: 80%;
+          border: 1px solid #ccc;
+      }
+      {% endif %}
+      .present
+      {
+          display: block!important;
+          margin-bottom: 15px
+      }
+      #switchers
+      {
+          margin-bottom: 20px;
+      }
+      #libs
+      {
+          position: relative;
+          top: -20px;
+      }
+    </style>
+{% endblock %}
+
+{% block content %}
+  <h1>
+      {{ analysis_name }} results
+      <small>{{ library_name }}, ID: {{ library_id }}</small>
+  </h1>
+  <div id="switchers" class="btn-group" role="group">
+    <button type="button"
+            class="btn btn-default"
+            onclick="$('#libs').toggleClass('present');$(this).toggleClass('active')">
+        Show libraries metadata
+    </button>
+    {% if config %}
+    <button type="button"
+            class="btn btn-default"
+            onclick="$('#config').toggleClass('present');$(this).toggleClass('active')">
+        Show configuration summary
+    </button>
+    {% endif %}
+    {% if krona_path %}
+    <a role="button"
+            class="btn btn-default"
+            href="/biogaz/result_html/{{ path }}/{{ type_of_analysis }}/{{ krona_path }}">
+        Open krona without this frame
+    </a>
+    {% endif %}
+  </div>
+  <div id="libs" style="display: none">
+      <div id="meta_table_header">
+          {% if reference_condition %}
+            <b>Reference condition:</b> {{ reference_condition }}
+          {% else %}
+            <b>Analysis type:</b> {{ analysis_name }}
+          {% endif %}
+      </div>
+      {{ data_table }}
+  </div>
+  {% if krona_path %}
+  <iframe id="krona_iframe" src="/biogaz/result_html/{{ path }}/{{ type_of_analysis }}/{{ krona_path }}">
+  </iframe>
+  {% endif %}
+  {% if config %}
+  <div id="config" style="display: none">
+      <pre>{{ config }}</pre>
+  </div>
+  {% endif %}
+  {% if files %}
+  <div class="list-group">
+    {% for file in files %}
+    <a href="/biogaz/result_{{ file.mode }}/{{ path }}/metatranscriptomics/{{ file.path }}" class="list-group-item">
+        <span class="glyphicon glyphicon-{{ file.icon }}" aria-hidden="true"></span>
+        {{ file.name }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endblock %}

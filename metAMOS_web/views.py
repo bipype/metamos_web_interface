@@ -189,10 +189,10 @@ def result_metatranscriptomics(request, results_object, data):
     data['config'] = config
     data['reference_condition'] = results_object.reference_condition
 
-    return render(request, 'results_meta.html', data)
+    return render(request, 'results.html', data)
 
 
-def result_bipype(request, results_object, data):
+def result_with_krona(request, results_object, data):
 
     results_metadata = MetadataManager.from_dict(results_object.libraries)
 
@@ -200,7 +200,19 @@ def result_bipype(request, results_object, data):
     data['library_name'] = results_metadata.get_column('library_name')[0]
     data['library_id'] = results_metadata.get_column('library_id')[0]
 
-    return render(request, 'results_krona.html', data)
+    return render(request, 'results.html', data)
+
+
+def result_analysis_3(request, results_object, data):
+
+    results_metadata = MetadataManager.from_dict(results_object.libraries)
+
+    data['files'] = results.get_list(results_object)
+
+    data['library_name'] = results_metadata.get_column('library_name')[0]
+    data['library_id'] = results_metadata.get_column('library_id')[0]
+
+    return render(request, 'results.html', data)
 
 
 def result(request, path, type_of_analysis):
@@ -238,8 +250,10 @@ def result(request, path, type_of_analysis):
 
         if results_object.type == 'metatranscriptomics':
             return result_metatranscriptomics(request, results_object, data)
+        elif results_object.type == 'analysis_3':
+            return result_analysis_3(request, results_object, data)
         else:
-            return result_bipype(request, results_object, data)
+            return result_with_krona(request, results_object, data)
 
     else:
 
