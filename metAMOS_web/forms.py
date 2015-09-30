@@ -19,7 +19,9 @@ def pretty_analysis_name(type_of_analysis):
 
     mappings = {
         'amplicons_its': 'Amplicons ITS',
-        'amplicons_16s': 'Amplicons 16S'
+        'amplicons_16s': 'Amplicons 16S',
+        'analysis_1': 'HUMAnN',
+        'analysis_3': 'MEGAN'
     }
 
     if type_of_analysis in mappings:
