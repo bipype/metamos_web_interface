@@ -37,7 +37,9 @@
 {% block content %}
   <h1>
       {{ analysis_name }} results
-      <small>{{ library_name }}, ID: {{ library_id }}</small>
+      {% if library_name }}
+        <small>{{ library_name }}, ID: {{ library_id }}</small>
+      {% endif %}
   </h1>
   <div id="switchers" class="btn-group" role="group">
     <button type="button"
