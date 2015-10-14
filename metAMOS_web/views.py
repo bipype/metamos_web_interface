@@ -250,7 +250,7 @@ def result(request, path, type_of_analysis):
 
         if results_object.type == 'metatranscriptomics':
             return result_metatranscriptomics(request, results_object, data)
-        elif results_object.type == 'analysis_3':
+        elif results_object.type == 'metagenome_3':
             return result_analysis_3(request, results_object, data)
         else:
             return result_with_krona(request, results_object, data)

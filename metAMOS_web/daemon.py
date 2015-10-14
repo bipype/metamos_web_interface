@@ -263,13 +263,21 @@ def run_metamos(job, results_object):
 
     update_progress(job, 90)
 
-    path_name = os.path.join(project_dir, 'Assemble/out/*.html')
-    krona_html = glob(path_name)
+    if sample.type == 'metagenome_3':
+        path_catcher = os.path.join(project_dir, 'Assemble/out/*.lite.rma')
+    else:
+        path_catcher = os.path.join(project_dir, 'Assemble/out/*.html')
 
-    # there should be exactly one krona *.html file in Assemble/out/
-    assert len(krona_html) == 1
+    path_name = glob(path_catcher)
 
-    shutil.copyfile(krona_html[0], sample.html_path)
+    # there should be exactly one krona *.html or *.little.rma file in Assemble/out/
+    assert len(path_name) == 1
+
+    if sample.type == 'metagenome_3':
+        shutil.copy(path_name[0], sample.output_dir)
+    else:
+        shutil.copyfile(path_name[0], sample.html_path)
+
 
     update_progress(job, 100)
 
